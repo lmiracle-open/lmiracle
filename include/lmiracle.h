@@ -3,12 +3,13 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "lm_error.h"
 
 /**
  * @brief 创建动态任务
  *
  */
-#define lm_task_create(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority) \
+#define lm_task_create(pcName, pxTaskCode, pvParameters, usStackDepth,  uxPriority) \
                                       xTaskCreate(pxTaskCode, \
                                                   pcName, \
                                                   usStackDepth, \
@@ -20,7 +21,7 @@
  * @brief 创建静态任务
  *
  */
-#define lm_task_create_static(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority, puxStackBuffer, pxTaskBuffer) \
+#define lm_task_create_static(pcName, pxTaskCode, pvParameters, usStackDepth, uxPriority, puxStackBuffer, pxTaskBuffer) \
                                       xTaskCreateStatic(pxTaskCode, \
                                                   pcName, \
                                                   usStackDepth, \
