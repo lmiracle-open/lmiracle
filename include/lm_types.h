@@ -23,13 +23,21 @@ extern "C" {
 }
 #endif
 
+#ifndef __barrier
+#define __barrier()   __asm__ __volatile__("":::"memory")
+#endif
+
 #define LM_TRUE                 0
 #define LM_FALSE                1
 
 #define likely(exp)         __builtin_expect(!!(exp), 1)    /* 期望位真 */
 #define unlikely(Exp)       __builtin_expect(!!(Exp), 0)    /* 期望为假 */
 
-#define ARRAY_LEN(x)        (sizeof(x) / sizeof((x)[0]))    /* 获取一个数组元素个数 */
+#define SETBIT(val,bit)     (val |= (1 << bit))             /* 设置BIT位 */
+#define CLRBIT(val,bit)     (val &= ~(1 << bit))            /* 清除BIT位 */
+#define ISSETBIT(val,bit)   (val & (1 << bit))              /* 判断是否置位 */
+
+#define ARRAY_LEN(x)        (sizeof(x)/sizeof((x)[0]))    /* 获取一个数组元素个数 */
 
 #endif
 

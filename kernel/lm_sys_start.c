@@ -12,10 +12,6 @@ void lm_system_init (void)
 
     /* 1.初始化控制台 */
     lm_shell_init();
-
-
 }
-
-
 
 /* end of file */
