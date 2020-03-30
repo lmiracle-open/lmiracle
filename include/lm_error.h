@@ -27,6 +27,7 @@ typedef  unsigned long lm_err_t;
 #define LM_EIO               8               /**< IO error */
 #define LM_EINTR             9               /**< Interrupted system call */
 #define LM_EINVAL            10              /**< Invalid argument */
+#define LM_ENODEV            11              /**< 设备不存在 */
 
 #define LM_ENULL                 11              /* 空指针 */
 #define LM_EQUEUE_FULL           12              /* 队列满 */
