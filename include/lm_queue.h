@@ -24,6 +24,7 @@ extern "C" {
 #include "lmiracle.h"
 #include "lm_error.h"
 #include "lm_types.h"
+#include <stdbool.h>
 
 typedef QueueHandle_t lm_queue_t;   /* 队列数据类型 */
 
@@ -57,7 +58,7 @@ int lm_queue_push(lm_queue_t queue, void *item, uint32_t wait_time)
         return LM_EQUEUE_FULL;
     }
 
-    return LM_OK;
+    return pdPASS;
 }
 
 /**
@@ -85,7 +86,7 @@ int lm_queue_pop(lm_queue_t queue, void *item, uint32_t wait_time, bool del_flag
         }
     }
 
-    return LM_OK;
+    return pdPASS;
 }
 
 #ifdef __cplusplus

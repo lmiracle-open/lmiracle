@@ -21,7 +21,6 @@ extern "C" {
 
 #include "FreeRTOS.h"
 
-/* 申请动态内存 */
 /**
  * @brief 申请动态内存
  * @param 申请内存字节数
