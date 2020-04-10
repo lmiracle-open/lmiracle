@@ -96,6 +96,19 @@ typedef void* lm_sem_t;
  */
 #define lm_sem_take(sem, timeout)        xSemaphoreTake(sem, timeout)
 
+
+/**
+ * @brief 进入临界区
+ */
+#define lm_critical_enter()        vPortEnterCritical()
+
+/**
+ * @brief 退出临界区
+ */
+#define lm_critical_exit()        vPortExitCritical()
+
+
+
 #endif /* __LMIRACLE_H */
 
 /* end of file */
