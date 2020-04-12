@@ -33,6 +33,8 @@ typedef  unsigned long lm_err_t;
 #define LM_EQUEUE_FULL           12              /* 队列满 */
 #define LM_EQUEUE_EMPTY          13              /* 队列空 */
 
+#define LM_EINPROGRESS        14                 /* 操作正在进行中 */
+
 
 #endif /* __LM_ERROR_H */
 

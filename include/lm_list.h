@@ -87,6 +87,12 @@ static inline void __lm_list_del(	struct lm_list_head *prev,
 	prev->next = next;
 }
 
+static inline int lm_list_is_last(const struct lm_list_head *list,
+                                  const struct lm_list_head *head)
+{
+    return list->next == head;
+}
+
 /**
  * deletes entry from list.
  * @entry: the element to delete from the list.
@@ -202,3 +208,4 @@ static inline int lm_list_empty(const struct lm_list_head *head)
 #endif  /* __LM_LIST_H__ */
 
 /* end of file */
+
