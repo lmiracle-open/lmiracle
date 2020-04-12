@@ -9,7 +9,12 @@
 
 static lm_console_t __g_console;
 
-static uint8_t recv_buf[200];
+static uint8_t recv_buf[200] = {0};
+
+static uint16_t recv_len = 0;
+
+/* 定义信号量 */
+static SemaphoreHandle_t console_sem;
 
 /* 定义shell实体 */
 static Shell __g_shell;
@@ -18,7 +23,7 @@ static Shell __g_shell;
 char shellBuffer[LM_SHELL_BUFF_SIZE];
 
 /* shell写函数 */
-static void lm_shell_write (const char data)
+static void lm_console_data_write (const char data)
 {
     if (__g_console.write) {
         __g_console.write(__g_console.com, (void *)&data, 1);
@@ -26,17 +31,21 @@ static void lm_shell_write (const char data)
 }
 
 /* shell读函数 */
-static char lm_shell_read (char *data)
+int lm_console_data_read (uint8_t *data, uint16_t len)
 {
-    int ret = LM_OK;
-
-    uint16_t len;
-
-    if (__g_console.read) {
-        ret = __g_console.read(data, &len);
+    if (NULL == data) {
+        return LM_ERROR;
     }
 
-    return (char)ret;
+    if (len > 0) {
+        /* copy data */
+        memcpy(recv_buf, data, len);
+        recv_len = len;
+        /* 释放信号量 */
+        lm_sem_give(console_sem);
+    }
+
+    return LM_OK;
 }
 
 void lm_console_output(const char *data)
@@ -74,7 +83,6 @@ int lm_console_register(lm_console_t *p_console)
 
     __g_console.com = p_console->com;
     __g_console.write = p_console->write;
-    __g_console.read = p_console->read;
 
     return LM_OK;
 }
@@ -85,13 +93,17 @@ void lm_shell_run (void *p_arg)
 {
     char data;
     uint16_t len;
+    BaseType_t err = pdFALSE;
 
-    lm_kprintf("shell task start... \r\n");
+//    lm_kprintf("shell task start... \r\n");
 
     while (1) {
-        if (__g_console.read && __g_console.read(recv_buf, &len) == LM_OK) {
-            for (int i = 0; i < len; i++) {
-                shellHandler(&__g_shell, (char )recv_buf[i]);
+        if (console_sem) {
+            err = lm_sem_take(console_sem, 1000);
+            if (pdTRUE == err) {
+                for (int i = 0; i < len; i++) {
+                    shellHandler(&__g_shell, (char )recv_buf[i]);
+                }
             }
         }
         lm_task_delay(10);
@@ -106,11 +118,13 @@ int lm_shell_init (void)
     lm_err_t ret = LM_OK;
 
     /* 挂载回调 */
-    __g_shell.write = lm_shell_write;
-    __g_shell.read = lm_shell_read;
+    __g_shell.write = lm_console_data_write;
 
     /* 初始化shell */
     shellInit(&__g_shell, shellBuffer, LM_SHELL_BUFF_SIZE);
+
+    /* 初始化信号量 */
+    console_sem = lm_sem_create_binary();
 
     lm_task_create("lm_shell", lm_shell_run, NULL, 1024, 5);
 

@@ -90,12 +90,23 @@ typedef  mutex_t lm_mutex_t;
 typedef semaphore_t lm_sem_t;
 
 /**
- * @brief 创建信号量
+ * @brief 创建二值信号量
+ *
+ * @return [lm_sem_t]
+ */
+#define lm_sem_create_binary()     xSemaphoreCreateBinary()
+
+/**
+ * @brief 创建计数型信号量
  *
  * @return [lm_sem_t]
  */
 #define lm_sem_create(count, value)        OSIF_SemaCreate(count, value)
 
+/**
+ * @brief 释放信号量
+ */
+#define lm_sem_give(sem)                xSemaphoreGive(sem)
 
 /**
  * @brief 释放信号量
@@ -126,7 +137,6 @@ typedef semaphore_t lm_semb_t;
  * @brief 获取二值信号量
  */
 #define lm_semb_take(semb,timeout)        OSIF_SembWait(semb, timeout)
-
 
 /**
  * @brief 进入临界区
