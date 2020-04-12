@@ -3,6 +3,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "lm_error.h"
 
 /**
@@ -79,22 +80,33 @@ typedef  void* lm_mutex_t;
 typedef void* lm_sem_t;
 
 /**
- * @brief 创建信号量
+ * @brief 创建二值信号量
+ *
+ * @return [lm_sem_t]
+ */
+#define lm_sem_create_binary()     xSemaphoreCreateBinary()
+
+/**
+ * @brief 创建计数型信号量
  *
  * @return [lm_sem_t]
  */
 #define lm_sem_create(count, value)     xSemaphoreCreateCounting(count, value)
 
+/**
+ * @brief 释放信号量
+ */
+#define lm_sem_give(sem)                xSemaphoreGive(sem)
 
 /**
  * @brief 释放信号量
  */
-#define lm_sem_give(sem)                 xSemaphoreGive(sem)
+#define lm_sem_give_isr(sem, xTask)     xSemaphoreGiveFromISR(sem, xTask)
 
 /**
  * @brief 获取信号量
  */
-#define lm_sem_take(sem, timeout)        xSemaphoreTake(sem, timeout)
+#define lm_sem_take(sem, timeout)       xSemaphoreTake(sem, timeout)
 
 
 /**
