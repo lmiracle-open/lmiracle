@@ -3,7 +3,13 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "lm_error.h"
+#include "lm_io.h"
+#include "lm_bitops.h"
+#include "lm_types.h"
+#include "osif.h"
+#include "semphr.h"
 
 /**
  * @brief 创建动态任务
@@ -54,47 +60,72 @@ typedef TickType_t lm_tick_t ;
 /**
  * @brief 互斥锁类型
  */
-typedef  void* lm_mutex_t;
+typedef  mutex_t lm_mutex_t;
 
 /**
  * @brief 创建互斥锁
  *
  * @return [lm_mutex_t]
  */
-#define lm_mutex_create()                xSemaphoreCreateMutex()
+#define lm_mutex_create(p_mutex)           OSIF_MutexCreate(p_mutex)
+
+/**
+ * @brief 永久等待
+ */
+#define LM_SEM_WAIT_FOREVER                    OSIF_WAIT_FOREVER
 
 /**
  * @brief 上锁
  */
-#define lm_mutex_lock(mutex, time)       xSemaphoreTake(mutex, time)
+#define lm_mutex_lock(p_mutex, timeout)    OSIF_MutexLock(p_mutex, timeout)
 
 /**
  * @brief 解锁
  */
-#define lm_mutex_unlock(mutex)           xSemaphoreGive(mutex)
+#define lm_mutex_unlock(p_mutex)           OSIF_MutexUnlock(p_mutex);
 
 /**
  * @brief 信号量类型
  */
-typedef void* lm_sem_t;
+typedef semaphore_t lm_sem_t;
 
 /**
  * @brief 创建信号量
  *
  * @return [lm_sem_t]
  */
-#define lm_sem_create(count, value)     xSemaphoreCreateCounting(count, value)
+#define lm_sem_create(count, value)        OSIF_SemaCreate(count, value)
 
 
 /**
  * @brief 释放信号量
  */
-#define lm_sem_give(sem)                 xSemaphoreGive(sem)
+#define lm_sem_give(sem)                  OSIF_SemaPost(sem)
 
 /**
  * @brief 获取信号量
  */
-#define lm_sem_take(sem, timeout)        xSemaphoreTake(sem, timeout)
+#define lm_sem_take(sem, timeout)         OSIF_SemaWait(sem, timeout)
+
+/**
+ * @brief 二值信号量类型
+ */
+typedef semaphore_t lm_semb_t;
+
+/**
+ * @brief 创建二值信号量
+ */
+#define lm_semb_create(semb)              OSIF_SembCreate(semb)
+
+/**
+ * @brief 释放二值信号量
+ */
+#define lm_semb_give(semb)                OSIF_SembPost(semb)
+
+/**
+ * @brief 获取二值信号量
+ */
+#define lm_semb_take(semb,timeout)        OSIF_SembWait(semb, timeout)
 
 
 /**
