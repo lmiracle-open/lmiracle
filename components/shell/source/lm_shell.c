@@ -1,0 +1,114 @@
+#include "lmiracle.h"
+#include "lm_shell.h"
+#include "mini-printf.h"
+#include <stdarg.h>
+#include <string.h>
+
+#define CONSOLE_OUT_SIZE                300         /* TODO 标志输出缓存大小 */
+
+/* 定义控制台设备指针 */
+const static lm_console_t *p_console = NULL;
+
+/* 定义控制台实体 */
+static Shell g_console = {0};
+
+/**
+ * 打印输出
+ */
+void lm_kprintf(const char *fmt, ...)
+{
+    va_list va;
+
+    /* 1.检查输入参数是否有效 */
+    if (unlikely(NULL == p_console)) {
+        return ;
+    }
+
+    /* 2.申请缓存 */
+    uint8_t buf[CONSOLE_OUT_SIZE] = {0};
+
+    /* 3.格式化数据 */
+    va_start(va, fmt);
+    mini_vsnprintf((void *)buf, CONSOLE_OUT_SIZE, fmt, va);
+
+    /* 4.向串口输出数据 */
+    if (p_console->write) {
+        p_console->write(p_console->com, buf, strlen((void *)buf));
+    }
+
+    /* 5.结束 */
+    va_end(va);
+}
+
+/**
+ * 控制台写数据接口
+ */
+static void lm_console_data_write (const char data)
+{
+    if (p_console->write) {
+        p_console->write(p_console->com, (void *)&data, 1);
+    }
+}
+
+/**
+ * shell任务
+ */
+static void lm_shell_run (void *p_arg)
+{
+    lm_kprintf("shell task start... \r\n");
+
+    while (1) {
+        if (p_console->read) {
+            /* 1.读取串口数据 */
+            uint16_t len = p_console->read(p_console->com, p_console->recv_buf);
+            if (len > 0) {
+                /* 2.处理接收的数据 */
+                for (int i = 0; i < len; i++) {
+                    shellHandler(&g_console, (char)p_console->recv_buf[i]);
+                }
+            }
+        }
+        lm_task_delay(1);
+    }
+}
+
+/**
+ * 控制台接口注册
+ */
+int lm_console_register(const lm_console_t *p_cole)
+{
+    /* 1.检查输入参数是否有效 */
+    if (unlikely(NULL == p_cole)) {
+        return LM_ERROR;
+    }
+
+    /* 2.注册 */
+    p_console = p_cole;
+
+    return LM_OK;
+}
+
+/**
+ * shell初始化
+ */
+int lm_shell_init (void)
+{
+    /* 1.检查输入参数是否有效 */
+    if (unlikely(NULL == p_console)) {
+        return LM_ERROR;
+    }
+
+    /* 2.挂载发送回调 */
+    g_console.write = lm_console_data_write;
+
+    /* 3.初始化shell */
+    shellInit(&g_console, p_console->cole_buf, p_console->cole_s);
+
+    /* 4.创建shell任务 */
+    lm_task_create("lm_shell", lm_shell_run, NULL, \
+                    p_console->stack_size, p_console->prio);
+
+    return LM_OK;
+}
+
+/* end of file */
