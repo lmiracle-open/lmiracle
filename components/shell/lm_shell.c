@@ -14,7 +14,7 @@ static uint8_t recv_buf[200] = {0};
 static uint16_t recv_len = 0;
 
 /* 定义信号量 */
-static SemaphoreHandle_t console_sem;
+static lm_semb_t console_sem;
 
 /* 定义shell实体 */
 static Shell __g_shell;
@@ -42,7 +42,7 @@ int lm_console_data_read (uint8_t *data, uint16_t len)
         memcpy(recv_buf, data, len);
         recv_len = len;
         /* 释放信号量 */
-        lm_sem_give(console_sem);
+        lm_semb_give(&console_sem);
     }
 
     return LM_OK;
@@ -95,18 +95,17 @@ void lm_shell_run (void *p_arg)
     uint16_t len;
     BaseType_t err = pdFALSE;
 
-//    lm_kprintf("shell task start... \r\n");
+    lm_kprintf("shell task start... \r\n");
 
     while (1) {
-        if (console_sem) {
-            err = lm_sem_take(console_sem, 1000);
-            if (pdTRUE == err) {
-                for (int i = 0; i < len; i++) {
-                    shellHandler(&__g_shell, (char )recv_buf[i]);
-                }
+        lm_semb_take(&console_sem, LM_SEM_WAIT_FOREVER);
+        if (recv_len > 0) {
+            for (int i = 0; i < recv_len; i++) {
+                shellHandler(&__g_shell, (char )recv_buf[i]);
             }
         }
-        lm_task_delay(10);
+
+        lm_task_delay(100);
     }
 }
 
@@ -124,7 +123,7 @@ int lm_shell_init (void)
     shellInit(&__g_shell, shellBuffer, LM_SHELL_BUFF_SIZE);
 
     /* 初始化信号量 */
-    console_sem = lm_sem_create_binary();
+    lm_semb_create(&console_sem);
 
     lm_task_create("lm_shell", lm_shell_run, NULL, 1024, 5);
 
