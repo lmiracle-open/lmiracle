@@ -89,8 +89,9 @@ typedef  mutex_t lm_mutex_t;
  */
 typedef semaphore_t lm_sem_t;
 
+
 /**
- * @brief 创建信号量
+ * @brief 创建计数型信号量
  *
  * @return [lm_sem_t]
  */
@@ -127,11 +128,11 @@ typedef semaphore_t lm_semb_t;
  */
 #define lm_semb_take(semb,timeout)        OSIF_SembWait(semb, timeout)
 
-
 /**
  * @brief 进入临界区
  */
 #define lm_critical_enter()        vPortEnterCritical()
+
 
 /**
  * @brief 退出临界区

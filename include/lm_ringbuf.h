@@ -23,6 +23,7 @@ extern "C" {
 #include "lm_error.h"
 #include "lm_types.h"
 #include <stdlib.h>
+
 #include <stdbool.h>
 
 typedef struct {
@@ -102,11 +103,9 @@ int lm_ringbuf_pop(lm_ringbuf_t *p_rb, uint8_t *data, uint16_t len)
         len = p_rb->fill_cnt;
     }
 
-    uint32_t cnt = p_rb->fill_cnt;
     for (int i = 0; i < len; i++) {
         p_rb->fill_cnt --;
-        *data = *p_rb->p_read ++;
-        *data ++;
+        *data++ = *p_rb->p_read ++;
         /* if 读取指针超过缓冲区末尾 则把指针指向原点 */
         if (p_rb->p_read >= p_rb->p_src + p_rb->size) {
             p_rb->p_read = p_rb->p_src;
