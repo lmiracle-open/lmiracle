@@ -210,6 +210,7 @@ int lm_spi_sync (lm_spi_dev_t     *p_spi,
     p_msg->p_spi = p_spi;
 
     lm_mutex_lock(&p_master->bus_lock_mutex, LM_SEM_WAIT_FOREVER);
+    p_master->p_spi = p_spi;
     ret = __spi_sync(p_master, p_spi, p_msg);
     lm_mutex_unlock(&p_master->bus_lock_mutex);
 
@@ -222,7 +223,7 @@ int lm_spi_sync (lm_spi_dev_t     *p_spi,
 int lm_spi_write_then_read (lm_spi_dev_t  *p_spi,
                             const uint8_t *txbuf,
                             size_t         n_tx,
-                            uint8_t       *rx_buf,
+                            uint8_t       *rxbuf,
                             size_t         n_rx)
 {
     int ret = LM_OK;
@@ -236,11 +237,13 @@ int lm_spi_write_then_read (lm_spi_dev_t  *p_spi,
 
     if (n_tx) {
         trans[0].len = n_tx;
+        trans[0].p_txbuf = txbuf;
         lm_spi_message_add_tail(&trans[0], &message);
     }
 
     if(n_rx) {
         trans[1].len = n_rx;
+        trans[1].p_rxbuf = rxbuf;
         lm_spi_message_add_tail(&trans[1], &message);
     }
 
