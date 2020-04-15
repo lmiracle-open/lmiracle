@@ -4,8 +4,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define CONSOLE_OUT_SIZE                300         /* TODO 标志输出缓存大小 */
-
 /* 定义控制台设备指针 */
 const static lm_console_t *p_console = NULL;
 
@@ -24,16 +22,15 @@ void lm_kprintf(const char *fmt, ...)
         return ;
     }
 
-    /* 2.申请缓存 */
-    uint8_t buf[CONSOLE_OUT_SIZE] = {0};
-
-    /* 3.格式化数据 */
+    /* 2.格式化数据 */
     va_start(va, fmt);
-    mini_vsnprintf((void *)buf, CONSOLE_OUT_SIZE, fmt, va);
+    mini_vsnprintf((void *)p_console->cole_out_buf, p_console->out_s, fmt, va);
 
-    /* 4.向串口输出数据 */
+    /* 3.向串口输出数据 */
     if (p_console->write) {
-        p_console->write(p_console->com, buf, strlen((void *)buf));
+        p_console->write(   p_console->com, \
+                            p_console->cole_out_buf, \
+                            strlen((void *)p_console->cole_out_buf));
     }
 
     /* 5.结束 */

@@ -1720,6 +1720,8 @@ int func_test(int argc, char *argv[])
     for (int i = 1; i < argc; i++) {
         lm_kprintf("%s\r\n", argv[i]);
     }
+
+    return LM_OK;
 }
 
 SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN), \

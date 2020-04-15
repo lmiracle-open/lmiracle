@@ -3,91 +3,77 @@
 #include "mini-printf.h"
 #include <stdarg.h>
 
+#include "lm_kservice.h"
 #include "user_mb_app.h"
 
-#define LM_SHELL_OUT_SIZE               300             /* 标志输出缓冲区SIZE */
+#include "lm_modbus.h"
 
-#define LM_SHELL_BUFF_SIZE              512
+/* 定义mb参数指针 */
+const static lm_mb_param_t *lm_mb_param = NULL;
 
-static lm_console_t __g_console;
-
-static uint8_t recv_buf[200];
-
-/* 定义shell实体 */
-static Shell __g_shell;
-
-/* 申请shell缓存 */
-char shellBuffer[LM_SHELL_BUFF_SIZE];
-
-/* shell写函数 */
-static void lm_shell_write (const char data)
+/**
+ * modbus参数注册接口
+ */
+int lm_modbus_param_register (const lm_mb_param_t *mb_param)
 {
-    if (__g_console.write) {
-        __g_console.write(__g_console.com, (void *)&data, 1);
-    }
-}
-
-/* shell读函数 */
-static char lm_shell_read (char *data)
-{
-    int ret = LM_OK;
-
-    uint16_t len;
-
-    if (__g_console.read) {
-        ret = __g_console.read(data, &len);
-    }
-
-    return (char)ret;
-}
-
-void lm_console_output(const char *data)
-{
-    /* 空函数 */
-}
-
-/* 打印输出 */
-void lm_kprintf(const char *fmt, ...)
-{
-    va_list va;
-
-    uint8_t buf[LM_SHELL_OUT_SIZE] = {0};
-
-    /* 格式化数据 */
-    va_start(va, fmt);
-    mini_vsnprintf((void *)buf, LM_SHELL_OUT_SIZE, fmt, va);
-
-    /* 输出数据 */
-    if (__g_console.write) {
-        __g_console.write(__g_console.com, buf, strlen((void *)buf));
-    } else {
-        lm_console_output((char *)buf);
-    }
-
-    va_end(va);
-}
-
-/* 控制台输出接口注册函数 */
-int lm_console_register(lm_console_t *p_console)
-{
-    if (NULL == p_console) {
+    /* 1.检查输入参数是否有效 */
+    if (unlikely(NULL == mb_param)) {
         return LM_ERROR;
     }
 
-    __g_console.com = p_console->com;
-    __g_console.write = p_console->write;
-    __g_console.read = p_console->read;
+    /* 2.注册 */
+    lm_mb_param = mb_param;
 
     return LM_OK;
 }
 
-/* modbus 从机轮询任务 */
-void lm_modbus_slave_poll (void *p_arg)
+/**
+ * modbus 从机发送任务 (测试用)
+ */
+
+extern USHORT usSRegHoldBuf[S_REG_HOLDING_NREGS]; /* 存储保持寄存器的数组 */
+
+static void lm_modbus_slave_send (void *p_arg)
+{
+    lm_assert(NULL == lm_mb_param);
+
+    lm_kprintf("modbus slave send task start... \r\n");
+
+    USHORT  *usRegHoldingBuf = usSRegHoldBuf;
+    int i = 0;
+
+    /* 3.轮询任务 */
+    while (1) {
+
+        ENTER_CRITICAL_SECTION();
+
+        usRegHoldingBuf[3] = (USHORT)(i++);/* 改变保持寄存器 3 的数据 */
+
+        EXIT_CRITICAL_SECTION();
+
+        if (i == 10000) {
+            i = 0;
+        }
+
+        lm_task_delay(2000);
+    }
+}
+
+/**
+ * modbus 从机轮询任务
+ */
+static void lm_modbus_slave_poll (void *p_arg)
 {
     lm_kprintf("modbus slave task start... \r\n");
 
+    lm_assert(NULL == lm_mb_param);
+
     /* 1.初始化modbus */
-    eMBInit(MB_RTU, 0x01, 1, 115200,  MB_PAR_EVEN);
+    eMBInit(lm_mb_param->embmode, \
+            lm_mb_param->slave_addr, \
+            lm_mb_param->uport, \
+            lm_mb_param->ubaud,  \
+            lm_mb_param->embparity);
 
     /* 2.使能modbus */
     eMBEnable();
@@ -95,24 +81,31 @@ void lm_modbus_slave_poll (void *p_arg)
     /* 3.轮询任务 */
     while (1) {
         eMBPoll();
+        lm_task_delay(200);
     }
 }
 
 /**
- * shell初始化
+ * modbus初始化
  */
-int lm_shell_init (void)
+int lm_modbus_init (void)
 {
     lm_err_t ret = LM_OK;
 
-    /* 挂载回调 */
-    __g_shell.write = lm_shell_write;
-    __g_shell.read = lm_shell_read;
+    lm_assert(NULL == lm_mb_param);
 
-    /* 初始化shell */
-    shellInit(&__g_shell, shellBuffer, LM_SHELL_BUFF_SIZE);
+    lm_task_create("modbus_slave", \
+                    lm_modbus_slave_poll, \
+                    NULL, \
+                    lm_mb_param->stack_size, \
+                    lm_mb_param->prio);
 
-    lm_task_create("lm_shell", lm_shell_run, NULL, 1024, 5);
+    /* 测试用 */
+    lm_task_create("slave_send", \
+                    lm_modbus_slave_send, \
+                    NULL, \
+                    lm_mb_param->stack_size, \
+                    lm_mb_param->prio);
 
     return ret;
 }

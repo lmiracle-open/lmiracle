@@ -1,5 +1,6 @@
 #include "lmiracle.h"
 #include "lm_shell.h"
+#include "lm_modbus.h"
 
 extern void lm_system_init (void);
 
@@ -12,9 +13,9 @@ void lm_system_init (void)
 
     /* 1.初始化shell */
     lm_shell_init();
-//
-//    /* 2.初始化modbus */
-//    lm_modbus_init();
+
+    /* 2.初始化modbus */
+    lm_modbus_init();
 }
 
 /* end of file */

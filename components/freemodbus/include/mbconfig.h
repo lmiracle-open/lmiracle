@@ -45,8 +45,6 @@ PR_BEGIN_EXTERN_C
  * All of these settings are available in the file <code>mbconfig.h</code>
  */
  
-#include <rtconfig.h>
-
 /*! \addtogroup modbus_cfg
  *  @{
  */
@@ -58,18 +56,10 @@ PR_BEGIN_EXTERN_C
 #define MB_MASTER_TCP_ENABLED                   (  0 )
 
 /*! \brief If Modbus Slave ASCII support is enabled. */
-#ifdef PKG_MODBUS_SLAVE_ASCII
-#define MB_SLAVE_ASCII_ENABLED                  (  1 )
-#else
 #define MB_SLAVE_ASCII_ENABLED                  (  0 )
-#endif
 
 /*! \brief If Modbus Slave RTU support is enabled. */
-#ifdef PKG_MODBUS_SLAVE_RTU
 #define MB_SLAVE_RTU_ENABLED                    (  1 )
-#else
-#define MB_SLAVE_RTU_ENABLED                    (  0 )
-#endif
 
 /*! \brief If Modbus Slave TCP support is enabled. */
 #define MB_SLAVE_TCP_ENABLED                    (  0 )

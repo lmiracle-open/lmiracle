@@ -24,145 +24,127 @@
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"
-
-/* ----------------------- Static variables ---------------------------------*/
-/* software simulation serial transmit IRQ handler thread stack */
-static uint8_t serial_soft_trans_irq_stack[512];
-
-/* serial event */
-static struct lm_event_t event_serial;
+#include "lm_modbus.h"
+#include "lmiracle.h"
 
 /* ----------------------- Defines ------------------------------------------*/
 /* serial transmit event */
-#define EVENT_SERIAL_TRANS_START    (1<<0)
+#define EVENT_SERIAL_TRANS_START                        (1<<0)
 
 /* ----------------------- static functions ---------------------------------*/
+
+/* 定义mb串口指针 */
+const static lm_mb_serial_t *lm_mb_serial = NULL;
+
+/* 定义串口事件实体 */
+static lm_event_t event_serial = NULL;
+
+/* ----------------------- static functions ---------------------------------*/
+
 static void prvvUARTTxReadyISR(void);
 static void prvvUARTRxISR(void);
 
-static int serial_rx_ind(uint8_t *data, uint16_t len);
-static void serial_transmit_task(void* parameter);
+static void lm_modbus_slave_trans_task (void* parameter);
 
 /* ----------------------- Start implementation -----------------------------*/
+
+/**
+ * 串口注册接口
+ */
+int lm_modbus_serial_register (const lm_mb_serial_t *mb_serial)
+{
+    /* 1.检查输入参数是否有效 */
+    lm_assert(NULL == mb_serial);
+
+    /* 2.注册 */
+    lm_mb_serial = mb_serial;
+
+    return LM_OK;
+}
+
+/**
+ * 初始化串口
+ */
 BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
         eMBParity eParity)
 {
-    rt_device_t dev = RT_NULL;
-    char uart_name[20];
-    /**
-     * set 485 mode receive and transmit control IO
-     * @note MODBUS_SLAVE_RT_CONTROL_PIN_INDEX need be defined by user
-     */
-#if defined(RT_MODBUS_SLAVE_USE_CONTROL_PIN)
-    rt_pin_mode(MODBUS_SLAVE_RT_CONTROL_PIN_INDEX, PIN_MODE_OUTPUT);
-#endif
-    /* set serial name */
-    rt_snprintf(uart_name,sizeof(uart_name), "uart%d", ucPORT);
-
-    dev = rt_device_find(uart_name);
-    if(dev == RT_NULL)
-    {
-        /* can not find uart */
-        return FALSE;
-    }
-    else
-    {
-        serial = (struct rt_serial_device*)dev;
+    /* 1.初始化底层驱动 */
+    if (lm_mb_serial->serial_init) {
+        lm_mb_serial->serial_init(ucPORT, ulBaudRate, ucDataBits, eParity);
     }
 
-    /* set serial configure parameter */
-    serial->config.baud_rate = ulBaudRate;
-    serial->config.stop_bits = STOP_BITS_1;
-    switch(eParity){
-    case MB_PAR_NONE: {
-        serial->config.data_bits = DATA_BITS_8;
-        serial->config.parity = PARITY_NONE;
-        break;
-    }
-    case MB_PAR_ODD: {
-        serial->config.data_bits = DATA_BITS_9;
-        serial->config.parity = PARITY_ODD;
-        break;
-    }
-    case MB_PAR_EVEN: {
-        serial->config.data_bits = DATA_BITS_9;
-        serial->config.parity = PARITY_EVEN;
-        break;
-    }
-    }
-    /* set serial configure */
-    serial->ops->configure(serial, &(serial->config));
-
-    /* open serial device */
-    if (!rt_device_open(&serial->parent, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX)) {
-        rt_device_set_rx_indicate(&serial->parent, serial_rx_ind);
-    } else {
+    /* 2.初始化串口事件 */
+    event_serial = lm_event_create();           /* 创建事件标志组 */
+    if (unlikely(NULL == event_serial)) {
         return FALSE;
     }
 
-    /* software initialize */
-    rt_event_init(&event_serial, "slave event", RT_IPC_FLAG_PRIO);
-    rt_thread_init(&thread_serial_soft_trans_irq,
-                   "slave trans",
-                   serial_soft_trans_irq,
-                   RT_NULL,
-                   serial_soft_trans_irq_stack,
-                   sizeof(serial_soft_trans_irq_stack),
-                   10, 5);
-    rt_thread_startup(&thread_serial_soft_trans_irq);
+    /* 3.创建从机事件任务 */
+    lm_task_create("slave_event", lm_modbus_slave_trans_task, NULL, \
+                                  lm_mb_serial->stack_size, lm_mb_serial->prio);
 
     return TRUE;
 }
 
+/**
+ * 使能串口
+ */
 void vMBPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 {
-    rt_uint32_t recved_event;
-    if (xRxEnable)
-    {
-        /* enable RX interrupt */
-        serial->ops->control(serial, RT_DEVICE_CTRL_SET_INT, (void *)RT_DEVICE_FLAG_INT_RX);
-        /* switch 485 to receive mode */
-#if defined(RT_MODBUS_SLAVE_USE_CONTROL_PIN)
-        rt_pin_write(MODBUS_SLAVE_RT_CONTROL_PIN_INDEX, PIN_LOW);
-#endif
+    /* 1.检查输入参数是否有效 */
+    if (unlikely(NULL == lm_mb_serial)) {
+        return ;
     }
-    else
-    {
-        /* switch 485 to transmit mode */
-#if defined(RT_MODBUS_SLAVE_USE_CONTROL_PIN)
-        rt_pin_write(MODBUS_SLAVE_RT_CONTROL_PIN_INDEX, PIN_HIGH);
-#endif
-        /* disable RX interrupt */
-        serial->ops->control(serial, RT_DEVICE_CTRL_CLR_INT, (void *)RT_DEVICE_FLAG_INT_RX);
-    }
-    if (xTxEnable)
-    {
+
+//    /* 2.使能或失能中断 */
+//    lm_mb_serial->serial_irq_enable(lm_mb_serial->com, xRxEnable);
+
+    /* 3.使能接收 */
+    if (xTxEnable) {
         /* start serial transmit */
-        rt_event_send(&event_serial, EVENT_SERIAL_TRANS_START);
-    }
-    else
-    {
+        lm_event_set(event_serial, EVENT_SERIAL_TRANS_START);
+    } else {
         /* stop serial transmit */
-        rt_event_recv(&event_serial, EVENT_SERIAL_TRANS_START,
-                RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, 0,
-                &recved_event);
+        lm_event_wait(  event_serial, \
+                        EVENT_SERIAL_TRANS_START, \
+                        pdTRUE, \
+                        pdFALSE, \
+                        0);
     }
 }
 
+/**
+ * 关闭串口设备
+ */
 void vMBPortClose(void)
 {
-    serial->parent.close(&(serial->parent));
+    /* empty */
+    return ;
 }
 
+/**
+ * 串口发送
+ */
 BOOL xMBPortSerialPutByte(CHAR ucByte)
 {
-    serial->parent.write(&(serial->parent), 0, &ucByte, 1);
+    /* 1.发送数据 */
+    if (lm_mb_serial->serial_write) {
+        lm_mb_serial->serial_write(lm_mb_serial->com, &ucByte, 1);
+    }
+
     return TRUE;
 }
 
+/**
+ * 串口接收
+ */
 BOOL xMBPortSerialGetByte(CHAR * pucByte)
 {
-    serial->parent.read(&(serial->parent), 0, pucByte, 1);
+    /* 1.接收数据 */
+    if (lm_mb_serial->serial_read) {
+        lm_mb_serial->serial_read(lm_mb_serial->com, (uint8_t *)pucByte);
+    }
+
     return TRUE;
 }
 
@@ -190,31 +172,35 @@ void prvvUARTRxISR(void)
 }
 
 /**
+ * 串口接收完成回调
+ */
+int lm_serial_recv_cb (uint8_t *data, uint16_t len)
+{
+    (void)data;
+    (void)len;
+
+    prvvUARTRxISR();
+
+    return LM_OK;
+}
+
+/**
  * Software simulation serial transmit IRQ handler.
  *
  * @param parameter parameter
  */
-static void serial_soft_trans_irq(void* parameter) {
-    rt_uint32_t recved_event;
-    while (1)
-    {
+static void lm_modbus_slave_trans_task (void* parameter)
+{
+    while (1) {
         /* waiting for serial transmit start */
-        rt_event_recv(&event_serial, EVENT_SERIAL_TRANS_START, RT_EVENT_FLAG_OR,
-                RT_WAITING_FOREVER, &recved_event);
+        lm_event_wait(  event_serial, \
+                        EVENT_SERIAL_TRANS_START, \
+                        pdTRUE, \
+                        pdFALSE, \
+                        LM_SEM_WAIT_FOREVER);
         /* execute modbus callback */
         prvvUARTTxReadyISR();
-    }
-}
 
-/**
- * This function is serial receive callback function
- *
- * @param dev the device of serial
- * @param size the data size that receive
- *
- * @return return RT_EOK
- */
-static rt_err_t serial_rx_ind(rt_device_t dev, rt_size_t size) {
-    prvvUARTRxISR();
-    return RT_EOK;
+//        lm_task_delay(1);
+    }
 }

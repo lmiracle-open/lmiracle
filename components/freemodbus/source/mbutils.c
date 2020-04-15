@@ -39,6 +39,8 @@
 #include "mb.h"
 #include "mbproto.h"
 
+#include "lm_assert.h"
+
 /* ----------------------- Defines ------------------------------------------*/
 #define BITS_UCHAR      8U
 
@@ -53,8 +55,8 @@ xMBUtilSetBits( UCHAR * ucByteBuf, USHORT usBitOffset, UCHAR ucNBits,
     USHORT          usNPreBits;
     USHORT          usValue = ucValue;
 
-    RT_ASSERT( ucNBits <= 8 );
-    RT_ASSERT( ( size_t )BITS_UCHAR == sizeof( UCHAR ) * 8 );
+    lm_assert( ucNBits <= 8 );
+    lm_assert( ( size_t )BITS_UCHAR == sizeof( UCHAR ) * 8 );
 
     /* Calculate byte offset for first byte containing the bit values starting
      * at usBitOffset. */
