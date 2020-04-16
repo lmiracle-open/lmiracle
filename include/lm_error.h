@@ -35,6 +35,9 @@ typedef  unsigned long lm_err_t;
 
 #define LM_EINPROGRESS        14                 /* 操作正在进行中 */
 
+#define LM_EFAULT              15                 /* 地址错误 */
+
+#define LM_ENOENT              16
 
 #endif /* __LM_ERROR_H */
 

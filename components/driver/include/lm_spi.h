@@ -40,11 +40,23 @@ typedef struct lm_spi_dev {
     /* 设备的最大频率 */
     uint32_t                    max_speed_hz;
 
-    void                       *cs_gpio;           /* 片选 */
+    const void                  *cs_gpio;           /* 片选 */
 
 }lm_spi_dev_t;
 
 typedef struct lm_spi_master lm_spi_master_t;
+
+#ifndef LM_SPI_NAME_SIZE
+#define LM_SPI_NAME_SIZE          32
+#endif
+
+/**
+ * @brief 设备ID
+ */
+struct lm_spi_dev_id {
+    char name[LM_SPI_NAME_SIZE];
+    unsigned long driver_data;         /* 驱动的私有数据 */
+};
 
 /**
  * @brief SPI传输
@@ -153,16 +165,18 @@ struct lm_spi_master {
  * @brief spi设备初始化
  */
 static inline void
-lm_spi_dev_init (lm_spi_dev_t *p_spi,
-                 uint8_t       bus_id,
-                 uint8_t       bits_per_word,
-                 uint16_t      mode,
-                 uint16_t      flags,
-                 void         *cs_gpio)
+lm_spi_dev_init (lm_spi_dev_t       *p_spi,
+                 uint8_t             bus_id,
+                 uint8_t             bits_per_word,
+                 uint16_t            mode,
+                 uint32_t            speed_hz,
+                 uint16_t            flags,
+                 const void         *cs_gpio)
 {
     p_spi->bus_id        = bus_id;
     p_spi->bits_per_word = bits_per_word;
     p_spi->mode          = mode;
+    p_spi->max_speed_hz  = speed_hz;
     p_spi->flags         = flags;
     p_spi->cs_gpio       = cs_gpio;
 }
@@ -226,7 +240,7 @@ extern int lm_spi_sync (lm_spi_dev_t     *p_spi,
  * @paran[in]  id     总线ID
  * @paran[in]  txbuf  发送数据缓存区
  * @paran[in]  n_tx   需要发送的数据
- * @paran[out] rx_buf 接受数据缓存区
+ * @paran[out] rxbuf  接受数据缓存区
  * @paran[in]  n_rx   需要接受的数据
  *
  *
@@ -236,7 +250,7 @@ extern int lm_spi_sync (lm_spi_dev_t     *p_spi,
 extern int lm_spi_write_then_read (lm_spi_dev_t  *p_spi,
                                    const uint8_t *txbuf,
                                    size_t         n_tx,
-                                   uint8_t       *rx_buf,
+                                   uint8_t       *rxbuf,
                                    size_t         n_rx);
 
 

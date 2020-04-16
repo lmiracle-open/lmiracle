@@ -36,6 +36,12 @@ struct lm_list_head {
 #define LIST_HEAD(name) \
 	struct lm_list_head name = LIST_HEAD_INIT(name)
 
+static inline void LM_INIT_LIST_HEAD(struct lm_list_head *list)
+{
+	list->next = list;
+    list->prev = list;
+}
+
 static inline void lm_list_head_init(struct lm_list_head *list)
 {
 	list->next = list;
