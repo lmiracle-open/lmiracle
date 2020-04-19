@@ -36,14 +36,8 @@ struct lm_list_head {
 #define LIST_HEAD(name) \
 	struct lm_list_head name = LIST_HEAD_INIT(name)
 
-<<<<<<< HEAD
-static inline void LM_INIT_LIST_HEAD(struct lm_list_head *list)
-{
-	list->next = list;
-=======
 static inline void LM_INIT_LIST_HEAD (struct lm_list_head *list)
 {
->>>>>>> modbus暂存版本 不能通信 还未找见问题
     list->prev = list;
 }
 
