@@ -24,8 +24,8 @@
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"
-#include "lm_modbus.h"
-#include "lmiracle.h"
+
+#include "user_mb_port.h"
 
 /* ----------------------- Defines ------------------------------------------*/
 /* serial transmit event */
@@ -34,30 +34,30 @@
 /* ----------------------- static functions ---------------------------------*/
 
 /* 定义mb串口指针 */
-const static lm_mb_serial_t *lm_mb_serial = NULL;
+const static lm_mb_serial_t *mb_serial = NULL;
 
 /* 定义串口事件实体 */
-static lm_event_t event_serial = NULL;
+static lm_devent_t event_serial = NULL;
 
 /* ----------------------- static functions ---------------------------------*/
 
 static void prvvUARTTxReadyISR(void);
 static void prvvUARTRxISR(void);
 
-static void lm_modbus_slave_trans_task (void* parameter);
+static void mb_slave_trans_task (void* parameter);
 
 /* ----------------------- Start implementation -----------------------------*/
 
 /**
- * 串口注册接口
+ * 串口底层注册接口
  */
-int lm_modbus_serial_register (const lm_mb_serial_t *mb_serial)
+int mb_hw_serial_register (const lm_mb_serial_t *p_mb)
 {
     /* 1.检查输入参数是否有效 */
-    lm_assert(NULL == mb_serial);
+    lm_assert(NULL == p_mb);
 
     /* 2.注册 */
-    lm_mb_serial = mb_serial;
+    mb_serial = p_mb;
 
     return LM_OK;
 }
@@ -69,8 +69,8 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
         eMBParity eParity)
 {
     /* 1.初始化底层驱动 */
-    if (lm_mb_serial->serial_init) {
-        lm_mb_serial->serial_init(ucPORT, ulBaudRate, ucDataBits, eParity);
+    if (mb_serial->serial_init) {
+        mb_serial->serial_init(ucPORT, ulBaudRate, ucDataBits, eParity);
     }
 
     /* 2.初始化串口事件 */
@@ -80,8 +80,11 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
     }
 
     /* 3.创建从机事件任务 */
-    lm_task_create("slave_event", lm_modbus_slave_trans_task, NULL, \
-                                  lm_mb_serial->stack_size, lm_mb_serial->prio);
+    lm_task_create( "slave_event", \
+                    mb_slave_trans_task, \
+                    NULL, \
+                    mb_serial->stack_size, \
+                    mb_serial->prio);
 
     return TRUE;
 }
@@ -92,12 +95,12 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 void vMBPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 {
     /* 1.检查输入参数是否有效 */
-    if (unlikely(NULL == lm_mb_serial)) {
+    if (unlikely(NULL == mb_serial)) {
         return ;
     }
 
 //    /* 2.使能或失能中断 */
-//    lm_mb_serial->serial_irq_enable(lm_mb_serial->com, xRxEnable);
+//    mb_serial->serial_irq_enable(mb_serial->com, xRxEnable);
 
     /* 3.使能接收 */
     if (xTxEnable) {
@@ -128,8 +131,8 @@ void vMBPortClose(void)
 BOOL xMBPortSerialPutByte(CHAR ucByte)
 {
     /* 1.发送数据 */
-    if (lm_mb_serial->serial_write) {
-        lm_mb_serial->serial_write(lm_mb_serial->com, &ucByte, 1);
+    if (mb_serial->serial_write) {
+        mb_serial->serial_write(mb_serial->com, &ucByte, 1);
     }
 
     return TRUE;
@@ -141,8 +144,8 @@ BOOL xMBPortSerialPutByte(CHAR ucByte)
 BOOL xMBPortSerialGetByte(CHAR * pucByte)
 {
     /* 1.接收数据 */
-    if (lm_mb_serial->serial_read) {
-        lm_mb_serial->serial_read(lm_mb_serial->com, (uint8_t *)pucByte);
+    if (mb_serial->serial_read) {
+        mb_serial->serial_read(mb_serial->com, (uint8_t *)pucByte);
     }
 
     return TRUE;
@@ -172,13 +175,10 @@ void prvvUARTRxISR(void)
 }
 
 /**
- * 串口接收完成回调
+ * 串口接收通知回调  中断中调用
  */
-int lm_serial_recv_cb (uint8_t *data, uint16_t len)
+int mb_serial_recv_notice_cb (void)
 {
-    (void)data;
-    (void)len;
-
     prvvUARTRxISR();
 
     return LM_OK;
@@ -189,18 +189,16 @@ int lm_serial_recv_cb (uint8_t *data, uint16_t len)
  *
  * @param parameter parameter
  */
-static void lm_modbus_slave_trans_task (void* parameter)
+static void mb_slave_trans_task (void* parameter)
 {
     while (1) {
         /* waiting for serial transmit start */
         lm_event_wait(  event_serial, \
                         EVENT_SERIAL_TRANS_START, \
-                        pdTRUE, \
+                        pdFALSE, \
                         pdFALSE, \
                         LM_SEM_WAIT_FOREVER);
         /* execute modbus callback */
         prvvUARTTxReadyISR();
-
-//        lm_task_delay(1);
     }
 }

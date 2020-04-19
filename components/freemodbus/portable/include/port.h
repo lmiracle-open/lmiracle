@@ -26,9 +26,13 @@
 
 #include "lmiracle.h"
 #include "lm_error.h"
-#include <assert.h>
+#include "lm_assert.h"
 #include <inttypes.h>
 #include <stdbool.h>
+
+#ifndef assert
+#define assert(e)  lm_assert(e)
+#endif
 
 #define INLINE
 #define PR_BEGIN_EXTERN_C           extern "C" {

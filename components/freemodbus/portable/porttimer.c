@@ -26,26 +26,25 @@
 #include "mb.h"
 #include "mbport.h"
 
-#include "lm_modbus.h"
-
+#include "user_mb_port.h"
 
 /* ----------------------- static functions ---------------------------------*/
 
 /* 定义mb定时器指针 */
-const static lm_mb_timer_t *lm_mb_timer = NULL;
+const static lm_mb_timer_t *mb_timer = NULL;
 
 /* ----------------------- Start implementation -----------------------------*/
 
 /**
- * 定时器注册接口
+ * 定时器底层注册接口
  */
-int lm_modbus_timer_register (const lm_mb_timer_t *mb_timer)
+int mb_hw_timer_register (const lm_mb_timer_t *p_mb)
 {
     /* 1.检查输入参数是否有效 */
-    lm_assert(NULL == mb_timer);
+    lm_assert(NULL == p_mb);
 
     /* 2.注册 */
-    lm_mb_timer = mb_timer;
+    mb_timer = p_mb;
 
     return LM_OK;
 }
@@ -68,11 +67,11 @@ BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
      * [9] 通用公式 timeout = (usTim1Timerout50us + 10) / 20 = 4.5ms 刚好比4ms大一点
      *
      */
-    uint32_t timeout = (usTim1Timerout50us + 10) / 20 + 5;
+    uint32_t timeout = (usTim1Timerout50us + 10) / 20 + 2;
 
     /* 2.初始化定时器 */
-    if (lm_mb_timer->timer_init) {
-        lm_mb_timer->timer_init(lm_mb_timer->timer_id, timeout);
+    if (mb_timer->timer_init) {
+        mb_timer->timer_init(mb_timer->timer_id, timeout);
         return TRUE;
     }
 
@@ -84,8 +83,8 @@ BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
  */
 void vMBPortTimersEnable()
 {
-    if (lm_mb_timer->timer_sleep) {
-        lm_mb_timer->timer_sleep(lm_mb_timer->timer_id, true);
+    if (mb_timer->timer_sleep) {
+        mb_timer->timer_sleep(mb_timer->timer_id, true);
     }
 }
 
@@ -94,15 +93,15 @@ void vMBPortTimersEnable()
  */
 void vMBPortTimersDisable()
 {
-    if (lm_mb_timer->timer_sleep) {
-        lm_mb_timer->timer_sleep(lm_mb_timer->timer_id, false);
+    if (mb_timer->timer_sleep) {
+        mb_timer->timer_sleep(mb_timer->timer_id, false);
     }
 }
 
 /**
- * 定时器超时处理
+ * 定时器超时处理 中断中调用
  */
-int lm_modbus_timer_cb (void)
+int mb_timer_expired_cb (void)
 {
     (void) pxMBPortCBTimerExpired();
 

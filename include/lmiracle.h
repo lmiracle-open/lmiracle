@@ -130,12 +130,18 @@ typedef semaphore_t lm_semb_t;
 /**
  * @brief 事件组类型
  */
-typedef eventgroup_t    lm_event_t;
-typedef eventbit_t      lm_bits_t;
+typedef EventGroupHandle_t  lm_devent_t;
+typedef StaticEventGroup_t  lm_sevent_t;
+typedef EventBits_t         lm_bits_t;
 /**
  * @brief 创建事件组
  */
 #define lm_event_create()                   OSIF_EventCreate()
+
+/**
+ * @brief 创建事件组(静态)
+ */
+#define lm_event_create_static(event)       xEventGroupCreateStatic(event)
 
 /**
  * @brief 设置事件组标志

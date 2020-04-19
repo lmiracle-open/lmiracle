@@ -65,7 +65,7 @@ static void lm_shell_run (void *p_arg)
                 }
             }
         }
-        lm_task_delay(1);
+        lm_task_delay(10);
     }
 }
 

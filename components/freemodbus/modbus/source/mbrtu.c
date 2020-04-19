@@ -43,8 +43,6 @@
 #include "mbcrc.h"
 #include "mbport.h"
 
-#include "lm_assert.h"
-
 /* ----------------------- Defines ------------------------------------------*/
 #define MB_SER_PDU_SIZE_MIN     4       /*!< Minimum size of a Modbus RTU frame. */
 #define MB_SER_PDU_SIZE_MAX     256     /*!< Maximum size of a Modbus RTU frame. */
@@ -155,7 +153,7 @@ eMBRTUReceive( UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT * pusLength )
     eMBErrorCode    eStatus = MB_ENOERR;
 
     ENTER_CRITICAL_SECTION(  );
-    lm_assert( usRcvBufferPos <= MB_SER_PDU_SIZE_MAX );
+//    assert( usRcvBufferPos <= MB_SER_PDU_SIZE_MAX );
 
     /* Length and CRC check */
     if( ( usRcvBufferPos >= MB_SER_PDU_SIZE_MIN )
@@ -213,6 +211,7 @@ eMBRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength )
         /* Activate the transmitter. */
         eSndState = STATE_TX_XMIT;
         vMBPortSerialEnable( FALSE, TRUE );
+
     }
     else
     {
@@ -228,7 +227,7 @@ xMBRTUReceiveFSM( void )
     BOOL            xTaskNeedSwitch = FALSE;
     UCHAR           ucByte;
 
-    lm_assert( eSndState == STATE_TX_IDLE );
+//    assert( eSndState == STATE_TX_IDLE );
 
     /* Always read the character. */
     ( void )xMBPortSerialGetByte( ( CHAR * ) & ucByte );
@@ -287,7 +286,7 @@ xMBRTUTransmitFSM( void )
 {
     BOOL            xNeedPoll = FALSE;
 
-    lm_assert( eRcvState == STATE_RX_IDLE );
+//    assert( eRcvState == STATE_RX_IDLE );
 
     switch ( eSndState )
     {
@@ -344,9 +343,8 @@ xMBRTUTimerT35Expired( void )
 
         /* Function called in an illegal state. */
     default:
-        lm_assert( ( eRcvState == STATE_RX_INIT ) ||
+        assert( ( eRcvState == STATE_RX_INIT ) ||
                 ( eRcvState == STATE_RX_RCV ) || ( eRcvState == STATE_RX_ERROR ) );
-         break;
     }
 
     vMBPortTimersDisable(  );

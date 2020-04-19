@@ -25,7 +25,7 @@
 #include "lmiracle.h"
 
 /* 定义事件实体 */
-static lm_event_t     slave_event = NULL;
+static lm_devent_t     slave_event = NULL;
 
 BOOL
 xMBPortEventInit( void )
@@ -43,6 +43,8 @@ xMBPortEventInit( void )
 BOOL
 xMBPortEventPost( eMBEventType eEvent )
 {
+    lm_assert(NULL == slave_event);
+
     lm_event_set(slave_event, eEvent);          /* 设置事件位 */
 
     return TRUE;
@@ -52,6 +54,8 @@ BOOL
 xMBPortEventGet( eMBEventType * eEvent )
 {
     lm_bits_t recv_event;
+
+    lm_assert(NULL == slave_event);
 
     /* waiting forever OS event */
     recv_event = lm_event_wait(  slave_event,
