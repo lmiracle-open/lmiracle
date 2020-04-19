@@ -12,9 +12,6 @@ void lm_system_init (void)
 
     /* 1.初始化shell */
     lm_shell_init();
-//
-//    /* 2.初始化modbus */
-//    lm_modbus_init();
 }
 
 /* end of file */

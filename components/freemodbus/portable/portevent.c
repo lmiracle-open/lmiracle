@@ -22,15 +22,20 @@
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"
-#include "lm_event.h"
+#include "lmiracle.h"
 
 /* 定义事件实体 */
-static struct lm_event_t     slave_event;
+static lm_devent_t     slave_event = NULL;
 
 BOOL
 xMBPortEventInit( void )
 {
     slave_event = lm_event_create();            /* 创建事件标志组 */
+
+    /* 1.检查输入参数是否有效 */
+    if (unlikely(NULL == slave_event)) {
+        return FALSE;
+    }
 
     return TRUE;
 }
@@ -38,6 +43,8 @@ xMBPortEventInit( void )
 BOOL
 xMBPortEventPost( eMBEventType eEvent )
 {
+    lm_assert(NULL == slave_event);
+
     lm_event_set(slave_event, eEvent);          /* 设置事件位 */
 
     return TRUE;
@@ -46,17 +53,18 @@ xMBPortEventPost( eMBEventType eEvent )
 BOOL
 xMBPortEventGet( eMBEventType * eEvent )
 {
-    lm_bits_t recvedEvent;
+    lm_bits_t recv_event;
+
+    lm_assert(NULL == slave_event);
 
     /* waiting forever OS event */
-    recvedEvent = lm_event_wait(slave_event,
+    recv_event = lm_event_wait(  slave_event,
                     EV_READY | EV_FRAME_RECEIVED | EV_EXECUTE | EV_FRAME_SENT,
-                    pdTRUE,
-                    pdFALSE,
-                    100);
+                    pdTRUE,     /* 退出时清除事件位 */
+                    pdFALSE,    /* 以上事件只要满足其一就可以 */
+                    LM_SEM_WAIT_FOREVER);
 
-    switch (recvedEvent)
-    {
+    switch (recv_event) {
     case EV_READY:
         *eEvent = EV_READY;
         break;

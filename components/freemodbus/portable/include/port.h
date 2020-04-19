@@ -26,9 +26,13 @@
 
 #include "lmiracle.h"
 #include "lm_error.h"
-#include <assert.h>
+#include "lm_assert.h"
 #include <inttypes.h>
 #include <stdbool.h>
+
+#ifndef assert
+#define assert(e)  lm_assert(e)
+#endif
 
 #define INLINE
 #define PR_BEGIN_EXTERN_C           extern "C" {
@@ -55,20 +59,5 @@ typedef int32_t LONG;
 #ifndef FALSE
 #define FALSE           0
 #endif
-
-/* 定时器相关 */
-typedef struct __modbus_timer_t {
-    uint16_t timer_ms;                  /* 触发中断调度的时间 */
-    int (*timer_init) (void);           /* 定时器初始化回调 */
-    int (*timer_sleep) (bool enable);   /* 定时器睡眠回调 */
-} lm_modbus_timer_t;
-
-/************************************* 对外接口 *********************************/
-
-/* 定时器注册接口 */
-extern int lm_modbus_timer_register (lm_modbus_timer_t *modbus_timer);
-
-/* 定时器超时处理 */
-extern void lm_modbus_timer_timeout (void);
 
 #endif
