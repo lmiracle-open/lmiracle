@@ -123,7 +123,7 @@ static lm_spi_master_t *__find_spi_master (lm_spi_dev_t *p_spi)
     lm_spi_master_t     *p_master = NULL;
 
     while(p_node != &__g_spi_list) {
-        p_master = lm_list_last_entry(p_node, lm_spi_master_t, list);
+        p_master = lm_list_entry(p_node, lm_spi_master_t, list);
 
         if (p_spi->bus_id == p_master->bus_id) {
             return p_master;
