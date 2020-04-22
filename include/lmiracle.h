@@ -54,7 +54,7 @@ typedef TickType_t lm_tick_t ;
  *
  * @return [lm_tick_t] 返回tick值
  */
-#define lm_tick_get()                       xTaskGetTickCount()
+#define lm_sys_get_tick()                   xTaskGetTickCount()
 
 /**
  * @brief 互斥锁类型
@@ -174,6 +174,47 @@ typedef EventBits_t         lm_bits_t;
  */
 #define lm_critical_exit()                  vPortExitCritical()
 
+
+/**
+ * @brief 判断是否是中断上下文
+ */
+//#define lm_is_int_context()                 osif_IsIsrContext()
+#define lm_is_int_context()                 0
+
+typedef TickType_t     lm_tick_t;
+
+/**
+ * @brief 获取当前tick值
+ */
+#define lm_sys_get_tick()                          xTaskGetTickCount()
+
+/**
+ * @brief 将ms转换为tick
+ */
+#define lm_ms_to_tick(timeout)                     MSEC_TO_TICK(timeout)
+
+/**
+ * @brief 将tick装换为ms
+ */
+static inline unsigned int
+lm_tick_to_ms(lm_tick_t tick)
+{
+    uint64_t          t;
+
+    t = tick;
+    t *= 1000;
+    t /= 1000;
+    return (unsigned int)t;
+}
+
+static inline void lm_udelay (uint32_t us)
+{
+    while(us--) {
+        volatile uint32_t i = 26;
+        while(i--);
+    }
+
+}
 
 #endif /* __LMIRACLE_H */
 

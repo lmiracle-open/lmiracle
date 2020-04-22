@@ -26,6 +26,7 @@
 #include "mbport.h"
 
 #include "user_mb_port.h"
+#include "lm_serial.h"
 
 /* ----------------------- Defines ------------------------------------------*/
 /* serial transmit event */
@@ -45,6 +46,7 @@ static void prvvUARTTxReadyISR(void);
 static void prvvUARTRxISR(void);
 
 static void mb_slave_trans_task (void* parameter);
+static void mb_slave_read_task (void* parameter);
 
 /* ----------------------- Start implementation -----------------------------*/
 
@@ -69,9 +71,15 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
         eMBParity eParity)
 {
     /* 1.初始化底层驱动 */
-    if (mb_serial->serial_init) {
-        mb_serial->serial_init(ucPORT, ulBaudRate, ucDataBits, eParity);
-    }
+    struct lm_serial_info serial_info;
+    lm_serial_get_info(ucPORT, &serial_info);
+    serial_info.config.baud_rate = ulBaudRate;
+    serial_info.config.data_bits = ucDataBits;
+    serial_info.config.parity = eParity;
+    serial_info.config.fast_rect = 1;
+    serial_info.idle_timeout = 0xFFFFFFFF;
+    serial_info.read_timeout = 0xFFFFFFFF;                /* 读阻塞 */
+    lm_serial_set_info(ucPORT, (const struct lm_serial_info *)&serial_info);
 
     /* 2.初始化串口事件 */
     event_serial = lm_event_create();           /* 创建事件标志组 */
@@ -86,6 +94,13 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
                     mb_serial->stack_size, \
                     mb_serial->prio);
 
+    lm_task_create( "read_task", \
+                    mb_slave_read_task, \
+                    NULL, \
+                    256, \
+                    (mb_serial->prio <=1 ) ?
+                              mb_serial->prio :(mb_serial->prio -1));
+
     return TRUE;
 }
 
@@ -98,9 +113,6 @@ void vMBPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
     if (unlikely(NULL == mb_serial)) {
         return ;
     }
-
-//    /* 2.使能或失能中断 */
-//    mb_serial->serial_irq_enable(mb_serial->com, xRxEnable);
 
     /* 3.使能接收 */
     if (xTxEnable) {
@@ -131,9 +143,7 @@ void vMBPortClose(void)
 BOOL xMBPortSerialPutByte(CHAR ucByte)
 {
     /* 1.发送数据 */
-    if (mb_serial->serial_write) {
-        mb_serial->serial_write(mb_serial->com, &ucByte, 1);
-    }
+    lm_serial_write(mb_serial->com, (const void *)&ucByte, 1);
 
     return TRUE;
 }
@@ -144,9 +154,7 @@ BOOL xMBPortSerialPutByte(CHAR ucByte)
 BOOL xMBPortSerialGetByte(CHAR * pucByte)
 {
     /* 1.接收数据 */
-    if (mb_serial->serial_read) {
-        mb_serial->serial_read(mb_serial->com, (uint8_t *)pucByte);
-    }
+    lm_serial_read(mb_serial->com, (uint8_t *)pucByte, 1);
 
     return TRUE;
 }
@@ -202,3 +210,13 @@ static void mb_slave_trans_task (void* parameter)
         prvvUARTTxReadyISR();
     }
 }
+
+
+static void mb_slave_read_task (void* parameter)
+{
+    while (1) {
+        prvvUARTRxISR();
+    }
+}
+
+/* end of file */

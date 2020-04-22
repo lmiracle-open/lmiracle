@@ -13,14 +13,16 @@ typedef struct {
     uint32_t stack_size;                    /* 控制台任务栈深度 */
     uint32_t prio;                          /* 控制台任务优先级 */
     uint32_t com;                           /* 控制台串口号 */
+    uint32_t baud_rate;                     /* 波特率 */
     char *cole_buf;                         /* 控制台所用缓存 shell内部使用 */
     uint16_t cole_s;                        /* 控制台所用缓存大小 */
     uint8_t *recv_buf;                      /* 串口任务接收缓存 */
+    uint32_t recv_size;                     /* 串口任务接收缓存大小 */
     uint8_t *cole_out_buf;                  /* 标准输出缓存 */
     uint16_t out_s;                         /* 标准输出缓存大小 */
 
-    console_output_t write;                 /* 写数据接口 */
-    console_input_t read;                   /* 读数据接口 */
+//    console_output_t write;                 /* 写数据接口 */
+//    console_input_t read;                   /* 读数据接口 */
 } lm_console_t;
 
 /**
