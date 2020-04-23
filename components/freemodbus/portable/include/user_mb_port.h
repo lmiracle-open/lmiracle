@@ -48,25 +48,6 @@ typedef struct {
     uint32_t stack_size;                    /* 串口发送事件任务栈深度 */
     uint32_t prio;                          /* 串口发送事件任务优先级 */
 
-    /**
-     * 串口初始化回调
-     */
-    int (*serial_init)(uint32_t com,uint32_t baud,uint8_t databit,uint8_t parity);
-
-    /**
-     * 串口中断使能回调
-     */
-    int (*serial_irq_enable)(uint32_t com, bool enabled);
-
-    /**
-     * 串口接收回调
-     */
-    int (*serial_read)(uint32_t com, uint8_t *data);
-
-    /**
-     * 串口发送回调
-     */
-    int (*serial_write)(uint32_t com, const void *data, uint16_t len);
 } lm_mb_serial_t;
 
 /* modbus参数注册结构体 */

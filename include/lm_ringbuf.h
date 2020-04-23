@@ -20,154 +20,168 @@ extern "C" {
 #endif
 
 #include "lmiracle.h"
-#include "lm_error.h"
-#include "lm_types.h"
-#include "lm_heap.h"
-
 #include <string.h>
 
-#include <stdbool.h>
-
-typedef struct
+/* ring buffer */
+struct lm_ringbuf
 {
-    uint16_t head;                  /* 头指针 */
-    uint16_t tail;                  /* 尾指针 */
-    uint16_t len;                   /* 有效数据长度 */
-    uint16_t size;                  /* 缓冲区最大长度 */
-    uint8_t  *pbuf;                 /* 缓冲区 */
-} lm_ringbuf_t;
+    uint8_t *buffer_ptr;
+    /*
+     *          mirror = 0                    mirror = 1
+     * +---+---+---+---+---+---+---+|+~~~+~~~+~~~+~~~+~~~+~~~+~~~+
+     * | 0 | 1 | 2 | 3 | 4 | 5 | 6 ||| 0 | 1 | 2 | 3 | 4 | 5 | 6 | Full
+     * +---+---+---+---+---+---+---+|+~~~+~~~+~~~+~~~+~~~+~~~+~~~+
+     *  read_idx-^                   write_idx-^
+     *
+     * +---+---+---+---+---+---+---+|+~~~+~~~+~~~+~~~+~~~+~~~+~~~+
+     * | 0 | 1 | 2 | 3 | 4 | 5 | 6 ||| 0 | 1 | 2 | 3 | 4 | 5 | 6 | Empty
+     * +---+---+---+---+---+---+---+|+~~~+~~~+~~~+~~~+~~~+~~~+~~~+
+     * read_idx-^ ^-write_idx
+     *
+     */
+    uint16_t read_mirror : 1;
+    uint16_t read_index : 15;
+    uint16_t write_mirror : 1;
+    uint16_t write_index : 15;
+
+    int16_t buffer_size;
+};
+
+enum lm_ringbuf_state
+{
+    LM_RINGBUF_EMPTY,
+    LM_RINGBUF_FULL,
+    /* half full is neither full nor empty */
+    LM_RINGBUF_HALFFULL,
+};
 
 /**
  * @brief 初始化环形缓冲区(静态)
- * @param p_rb,环形缓冲区指针
- *        buff,缓冲区数组
- *        size,缓冲区大小
- * @return 错误码
+ * @param p_rb 环形缓冲区指针
+ *        pool 缓冲区地址
+ *        size 缓冲区大小
+ *
+ * @return LM_OK  成功
+ *         其他    失败
  */
-static inline
-int lm_ringbuf_init (lm_ringbuf_t *p_rb, uint8_t *buff, uint32_t size)
+extern int lm_ringbuf_init (struct lm_ringbuf *p_rb, uint8_t *pool, size_t size);
+
+/**
+ * @brief 将数据写入环形缓存区
+ *
+ * @param[in] p_rb   环形缓冲区指针
+ * @param[in] ptr    需要写入数据的地址
+ * @param[in] length 需要写入数据的长度
+ *
+ * return 大于０ : 写入数据的长度
+ *        小于０ : 错误码
+ */
+extern size_t lm_ringbuf_put (struct lm_ringbuf *p_rb,
+                              const uint8_t     *ptr,
+                              uint16_t           length);
+
+/**
+ * @brief 将数据写入环形缓存区,如果满了，覆盖以前数据
+ *
+ * @param[in] p_rb   环形缓冲区指针
+ * @param[in] ptr    需要写入数据的地址
+ * @param[in] length 需要写入数据的长度
+ *
+ * return 大于０ : 写入数据的长度
+ *        小于０ : 错误码
+ */
+extern size_t lm_ringbuf_put_force (struct lm_ringbuf *p_rb,
+                                    const uint8_t     *ptr,
+                                    uint16_t           length);
+
+/**
+ * @brief 获取数据
+ *
+ * @param[in]  p_rb   环形缓冲区指针
+ * @param[out] ptr    保存获取数据的地址
+ * @param[in]  length 获取数据的长度
+ *
+ * return 大于０ : 获取数据的长度
+ *        小于０ : 错误码
+ */
+extern size_t lm_ringbuf_get (struct lm_ringbuf *p_rb,
+                              uint8_t           *ptr,
+                              uint16_t           length);
+
+/**
+ * @brief 将一个字节写入到环形缓存区
+ *
+ * @param[in] p_rb 环形缓冲区指针
+ * @param[in] ch   需要写入的字符
+ *
+ * return 大于０ : 写入数据的长度
+ *        小于０ : 错误码
+ */
+extern size_t lm_ringbuf_putchar (struct lm_ringbuf *p_rb, const uint8_t ch);
+
+
+/**
+ * @brief 将一个字节强制写入到环形缓存区
+ *
+ * @param[in] p_rb 环形缓冲区指针
+ * @param[in] ch   需要写入的字符
+ *
+ * return 大于０ : 写入数据的长度
+ *        小于０ : 错误码
+ */
+extern size_t lm_ringbuf_putchar_force (struct lm_ringbuf *p_rb, const uint8_t ch);
+
+/**
+ * @brief 获取一个字节
+ *
+ * @param[in]  p_rb 环形缓冲区指针
+ * @param[out] ch   保存获取数据的地址
+ *
+ * return 大于０ : 获取数据的长度
+ *        小于０ : 错误码
+ */
+extern size_t lm_ringbuf_getchar (struct lm_ringbuf *p_rb, uint8_t *ch);
+
+/**
+ * @brief 获取环形缓存区数据长度
+ *
+ * @param[in]  p_rb   环形缓冲区指针
+ *
+ * return 大于０ : 环形缓存区中数据的长度
+ *        小于０ : 错误码
+ */
+extern size_t lm_ringbuf_data_len (struct lm_ringbuf *p_rb);
+
+
+/**
+ * @brief 复位环形缓存区
+ *
+ * @param[in]  p_rb   环形缓冲区指针
+ */
+extern void lm_ringbuf_reset (struct lm_ringbuf *p_rb);
+
+
+/**
+ * @brief 获取环形缓存区的长度
+ *
+ * @param[in]  p_rb   环形缓冲区指针
+ *
+ * @return 返回环形缓存区长度
+ */
+static inline size_t lm_ringbuf_get_size(struct lm_ringbuf *p_rb)
 {
-    /* 1.参数检查 */
-    if (unlikely(NULL == p_rb || NULL == buff || size <= 0)) {
-        return LM_ERROR;
+    if (p_rb == NULL) {
+        return 0;
     }
 
-    p_rb->head = p_rb->tail = p_rb->len = 0;
-    p_rb->size = size;
-    p_rb->pbuf = buff;
-    memset(p_rb->pbuf, 0, sizeof(uint8_t)*size);
-
-    return LM_OK;
+    return p_rb->buffer_size;
 }
 
 /**
- * @brief 动态创建环形缓冲区
- * @param p_rb,环形缓冲区指针
- *        size,缓冲区长度
- * @return 错误码
+ * @brief 返回环形缓存区的空间
  */
-static inline
-int lm_ringbuf_create (lm_ringbuf_t *p_rb, uint32_t size)
-{
-    /* 1.参数检查 */
-    if (NULL != p_rb || size <= 0) {
-        return LM_ERROR;
-    }
+#define lm_ringbuf_space_len(p_rb) ((p_rb)->buffer_size - lm_ringbuf_data_len(p_rb))
 
-    /* 2.动态申请缓存 */
-    p_rb->pbuf = lm_mem_alloc(size);
-    if (unlikely(NULL == p_rb->pbuf)) {
-        return LM_ENOMEM;
-    }
-
-    /* 3.初始化环形缓冲区 */
-    p_rb->head = p_rb->tail = p_rb->len = 0;
-    p_rb->size = size;
-    memset(p_rb->pbuf, 0, sizeof(uint8_t)*size);
-
-    return LM_OK;
-}
-
-/**
- * @brief 销毁环形缓冲区
- * @param p_rb,环形缓冲区指针
- * @return 错误码
- */
-static inline
-int lm_ringbuf_destroy (lm_ringbuf_t *p_rb)
-{
-    /* 1.参数检查 */
-    if (unlikely(NULL == p_rb)) {
-        return LM_ERROR;
-    }
-
-    /* 2.销毁缓存 */
-    lm_mem_free(p_rb->pbuf);
-
-    return LM_OK;
-}
-
-/**
- * @brief 写数据到环形缓冲区
- * @param p_rb,环形缓冲区指针
- *        data,待写入的数据
- * @return 错误码
- */
-static inline
-int lm_ringbuf_push (lm_ringbuf_t *p_rb, uint8_t data)
-{
-    /* 1.参数检查 */
-    if (unlikely(NULL == p_rb)) {
-        return LM_ERROR;
-    }
-
-    /* 2.判断缓冲区是否已满 */
-    if (p_rb->len >= p_rb->size) {
-        return LM_ENULL;
-    }
-
-    /* 3.从缓冲区尾入 */
-    p_rb->pbuf[p_rb->tail] = data;
-
-    /* 4.防止越界非法访问 */
-    p_rb->tail = (p_rb->tail + 1) % p_rb->size;
-
-    /* 5.数据区长度递增 */
-    p_rb->len ++;
-
-    return LM_OK;
-}
-
-/**
- * @brief 从缓冲区中读取数据
- * @param p_rb,环形缓冲区指针
- *        data,读出的数据
- * @return 错误码
- */
-static inline
-int lm_ringbuf_pop (lm_ringbuf_t *p_rb, uint8_t *data)
-{
-    /* 1.参数检查 */
-    if (unlikely(NULL == p_rb || NULL == data)) {
-        return LM_ERROR;
-    }
-
-    /* 2.有效数据长度检查 */
-    if (p_rb->len == 0) {
-        return LM_ERROR;
-    }
-
-    /* 3.先进先出FIFO，从缓冲区头出 */
-    *data = p_rb->pbuf[p_rb->head];
-
-    /* 4.防止越界非法访问 */
-    p_rb->head = (p_rb->head + 1) % p_rb->size;
-
-    /* 5.数据区长度递减 */
-    p_rb->len --;
-
-    return LM_OK;
-}
 
 #ifdef __cplusplus
 }
