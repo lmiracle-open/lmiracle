@@ -67,7 +67,7 @@ BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
      * [9] 通用公式 timeout = (usTim1Timerout50us + 10) / 20 = 4.5ms 刚好比4ms大一点
      *
      */
-    uint32_t timeout = (usTim1Timerout50us + 10) / 20 + 2;
+    uint32_t timeout = (usTim1Timerout50us + 10) / 20 + 3;
 
     /* 2.初始化定时器 */
     if (mb_timer->timer_init) {
