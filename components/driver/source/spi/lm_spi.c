@@ -69,10 +69,7 @@ static int __spi_transfer_one_message (lm_spi_master_t  *p_master,
         }
 
         if (xfer->delay_usece) {
-//            uint16_t us = xfer->delay_usece;
-//            if (us < 10) {
-//                lm_udelay(us);
-//            } todo 没有us延时
+            lm_udelay(xfer->delay_usece);
         }
 
         if (xfer->cs_change) {
