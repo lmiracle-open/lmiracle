@@ -29,10 +29,17 @@ typedef  unsigned long lm_err_t;
 #define LM_EINVAL            10              /**< Invalid argument */
 #define LM_ENODEV            11              /**< 设备不存在 */
 
-#define LM_ENULL                 11              /* 空指针 */
-#define LM_EQUEUE_FULL           12              /* 队列满 */
-#define LM_EQUEUE_EMPTY          13              /* 队列空 */
+#define LM_ENULL             11              /* 空指针 */
+#define LM_EQUEUE_FULL       12              /* 队列满 */
+#define LM_EQUEUE_EMPTY      13              /* 队列空 */
 
+#define LM_EINPROGRESS       14              /* 操作正在进行中 */
+
+#define LM_EFAULT            15              /* 地址错误 */
+
+#define LM_ENOENT            16
+#define LM_EEXIST            17              /* 文件存在 */
+#define LM_ENOTSUP           18              /* 不支持 */
 
 #endif /* __LM_ERROR_H */
 

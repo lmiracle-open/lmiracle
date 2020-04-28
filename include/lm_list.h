@@ -36,6 +36,11 @@ struct lm_list_head {
 #define LIST_HEAD(name) \
 	struct lm_list_head name = LIST_HEAD_INIT(name)
 
+static inline void LM_INIT_LIST_HEAD (struct lm_list_head *list)
+{
+    list->prev = list;
+}
+
 static inline void lm_list_head_init(struct lm_list_head *list)
 {
 	list->next = list;
@@ -85,6 +90,12 @@ static inline void __lm_list_del(	struct lm_list_head *prev,
 {
 	next->prev = prev;
 	prev->next = next;
+}
+
+static inline int lm_list_is_last(const struct lm_list_head *list,
+                                  const struct lm_list_head *head)
+{
+    return list->next == head;
 }
 
 /**
@@ -202,3 +213,4 @@ static inline int lm_list_empty(const struct lm_list_head *head)
 #endif  /* __LM_LIST_H__ */
 
 /* end of file */
+

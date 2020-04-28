@@ -27,8 +27,8 @@ extern "C" {
 #define __barrier()   __asm__ __volatile__("":::"memory")
 #endif
 
-#define LM_TRUE                 0
-#define LM_FALSE                1
+#define LM_TRUE                 1
+#define LM_FALSE                0
 
 #define likely(exp)         __builtin_expect(!!(exp), 1)    /* 期望位真 */
 #define unlikely(Exp)       __builtin_expect(!!(Exp), 0)    /* 期望为假 */
