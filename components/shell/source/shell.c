@@ -1133,13 +1133,6 @@ static void shellWirteReturnValue(Shell *shell, int value)
     char buffer[12] = "00000000000";
     shellWriteString(shell, "Return: ");
     shellWriteString(shell, &buffer[11 - shellToDec(value, buffer)]);
-    shellWriteString(shell, ", 0x");
-    for (short i = 0; i < 11; i++)
-    {
-        buffer[i] = '0';
-    }
-    shellToHex(value, buffer);
-    shellWriteString(shell, buffer);
     shellWriteString(shell, "\r\n");
 }
 
