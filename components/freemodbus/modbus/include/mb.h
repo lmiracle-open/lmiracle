@@ -310,7 +310,7 @@ eMBErrorCode    eMBRegisterCB( UCHAR ucFunctionCode,
  *       a <b>SLAVE DEVICE FAILURE</b> exception is sent as a response.
  */
 eMBErrorCode    eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress,
-                               USHORT usNRegs );
+                               USHORT usNRegs, eMBRegisterMode eMode );
 
 /*! \ingroup modbus_registers
  * \brief Callback function used if a <em>Holding Register</em> value is
@@ -409,7 +409,7 @@ eMBErrorCode    eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress,
  *       a <b>SLAVE DEVICE FAILURE</b> exception is sent as a response.
  */
 eMBErrorCode    eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress,
-                                  USHORT usNDiscrete );
+                                  USHORT usNDiscrete, eMBRegisterMode eMode );
 
 #ifdef __cplusplus
 PR_END_EXTERN_C
