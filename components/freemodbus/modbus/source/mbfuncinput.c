@@ -93,7 +93,7 @@ eMBFuncReadInputRegister( UCHAR * pucFrame, USHORT * usLen )
             *usLen += 1;
 
             eRegStatus =
-                eMBRegInputCB( pucFrameCur, usRegAddress, usRegCount );
+                eMBRegInputCB( pucFrameCur, usRegAddress, usRegCount, MB_REG_READ);
 
             /* If an error occured convert it into a Modbus exception. */
             if( eRegStatus != MB_ENOERR )

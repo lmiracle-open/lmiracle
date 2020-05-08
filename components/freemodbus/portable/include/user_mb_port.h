@@ -8,24 +8,48 @@
 
 #include <stdbool.h>
 
-/* -----------------------Slave Defines -------------------------------------*/
-#define S_DISCRETE_INPUT_START                    0
-#define S_DISCRETE_INPUT_NDISCRETES               16
-#define S_COIL_START                              0
-#define S_COIL_NCOILS                             64
-#define S_REG_INPUT_START                         0
-#define S_REG_INPUT_NREGS                         100
-#define S_REG_HOLDING_START                       0
-#define S_REG_HOLDING_NREGS                       100
+/***************************** modbus从机起始地址定义 *****************************/
 
-/* salve mode: holding register's all address */
-#define          S_HD_RESERVE                     0
-/* salve mode: input register's all address */
-#define          S_IN_RESERVE                     0
-/* salve mode: coil's all address */
-#define          S_CO_RESERVE                     0
-/* salve mode: discrete's all address */
-#define          S_DI_RESERVE                     0
+/*
+ * 寄存器数量可根据项目需求进行调整
+ */
+#define S_DISCRETE_INPUT_START              0       /* 离散输入寄存器起始地址 */
+#define S_DISCRETE_INPUT_NDISCRETES         16      /* 离散输入寄存器数量 */
+#define S_COIL_START                        0       /* 线圈寄存器起始地址 */
+#define S_COIL_NCOILS                       16      /* 线圈寄存器数量 */
+#define S_REG_INPUT_START                   0       /* 输入寄存器起始地址 */
+#define S_REG_INPUT_NREGS                   128     /* 输入寄存器数量 */
+#define S_REG_HOLDING_START                 0       /* 保持寄存器起始地址 */
+#define S_REG_HOLDING_NREGS                 128     /* 保持寄存器数量 */
+
+#define READ_COIL_REG                       0x01    /* 01. 读线圈寄存器 */
+#define READ_DISCRETE_INPUT_REG             0x02    /* 02. 读离散输入寄存器 */
+#define READ_HOLDING_REG                    0x03    /* 03. 读保持寄存器 */
+#define READ_INPUT_REG                      0x04    /* 04. 读输入寄存器 */
+#define WRITE_COIL_REG                      0x05    /* 05. 写单个线圈寄存器 */
+#define WRITE_HOLDING_REG                   0x06    /* 06. 写单个保持寄存器 */
+#define WRITE_MUL_COIL_REG                  0x0F    /* 15. 写多个线圈寄存器 */
+#define WRITE_MUL_HOLDING_REG               0x10    /* 16. 写多个保持寄存器 */
+
+/*********************************** end **************************************/
+
+/**************************** modbus从机寄存器操作类型定义 **************************/
+
+typedef enum {
+    WRITE_COIL_REG_EVENT                    = 1<<0, /* 写线圈寄存器事件 */
+    WRITE_HOLDING_REG_EVENT                 = 1<<1, /* 写保持寄存器事件 */
+} mbRegWriteEvent;
+
+typedef enum {
+    LM_WRITE_COIL_REG,                              /* 写线圈寄存器 */
+    LM_WRITE_DISCRETE_INPUT_REG,                    /* 写离散输入寄存器 */
+    LM_WRITE_HOLDING_REG,                           /* 写保持寄存器 */
+    LM_WRITE_INPUT_REG,                             /* 写输入寄存器 */
+} mbRegOpsType;
+
+/*********************************** end **************************************/
+
+/*************************** modbus从机移植接口数据结构定义  *************************/
 
 /* 用户定时器注册结构体 */
 typedef struct {
@@ -47,7 +71,6 @@ typedef struct {
     uint32_t com;                           /* 串口ID */
     uint32_t stack_size;                    /* 串口发送事件任务栈深度 */
     uint32_t prio;                          /* 串口发送事件任务优先级 */
-
 } lm_mb_serial_t;
 
 /* modbus参数注册结构体 */
@@ -59,7 +82,26 @@ typedef struct {
     UCHAR  uport;                           /* 串口号 */
     eMBParity  embparity;                   /* 校验模式 */
     ULONG ubaud;                            /* 波特率 */
+
+    /**
+     * 写线圈寄存器回调  应用程序注册此函数
+     */
+    int (*write_coil_reg_cb) (  uint8_t *pucRegBuffer, \
+                                uint16_t usAddress, \
+                                uint16_t usBitOffset, \
+                                uint16_t usNCoils);
+
+    /**
+     * 写保持寄存器回调  应用程序注册此函数
+     */
+    int (*write_hold_reg_cb) (  uint8_t *pucRegBuffer, \
+                                uint16_t usAddress, \
+                                uint16_t usNRegs);
 } lm_mb_param_t;
+
+/*********************************** end **************************************/
+
+/***************************** modbus从机对外提供接口  *****************************/
 
 /**
  * @brief       modbus协议初始化
@@ -102,6 +144,21 @@ extern int mb_timer_expired_cb (void);
  * @return      错误码
  */
 extern int mb_serial_recv_notice_cb (void);
+
+/**
+ * @brief       用户操作modbus寄存器接口
+ * @param       type,寄存器类型
+ * @param       pBuf,数据指针
+ * @param       addr,寄存器地址
+ * @param       num,寄存器数量
+ * @return      错误码
+ */
+extern int lm_modbus_reg_ops (  mbRegOpsType type, \
+                                uint8_t *pBuf, \
+                                uint16_t addr, \
+                                uint16_t num);
+
+/*********************************** end **************************************/
 
 #endif /* __USER_MB_PORT_H */
 
