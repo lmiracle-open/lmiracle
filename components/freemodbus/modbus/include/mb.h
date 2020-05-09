@@ -103,7 +103,8 @@ PR_BEGIN_EXTERN_C
 typedef enum
 {
     MB_REG_READ,                /*!< Read register values and pass to protocol stack. */
-    MB_REG_WRITE                /*!< Update register values. */
+    MB_REG_WRITE,               /*!< Update register values. */
+    LM_REG_WRITE                /* lm write reg */
 } eMBRegisterMode;
 
 /*! \ingroup modbus
