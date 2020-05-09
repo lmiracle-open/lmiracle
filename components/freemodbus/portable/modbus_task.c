@@ -61,6 +61,8 @@ const static lm_mb_param_t __mb_def_param = {
     .uport              = 0,                    /* 串口号 */
     .embparity          = MB_PAR_EVEN,          /* 偶校验 */
     .ubaud              = 115200,               /* 波特率 */
+    .execu_coil_reg_cb  = NULL,                 /* 写线圈寄存器回调 */
+    .execu_hold_reg_cb  = NULL,                 /* 写保持寄存器回调 */
 };
 
 /* 定义modbus参数指针 */
@@ -131,18 +133,19 @@ static void mb_slave_event (void *p_arg)
                         pdTRUE,     /* 退出时清除事件位 */
                         pdFALSE,    /* 以上事件只要满足其一就可以 */
                         LM_SEM_WAIT_FOREVER);
+
         if (WRITE_COIL_REG_EVENT == recv_event) {
             /* 执行写线圈寄存器回调 */
-            if (g_modbus->write_coil_reg_cb) {
-                g_modbus->write_coil_reg_cb(ucSCoilBuf, \
+            if (g_modbus->execu_coil_reg_cb) {
+                g_modbus->execu_coil_reg_cb(ucSCoilBuf, \
                                             WriteCoilStart, \
                                             WriteCoilBitStart, \
                                             WriteCoilRegNum);
             }
         } else if (WRITE_HOLDING_REG_EVENT == recv_event) {
             /* 执行写保持寄存器回调 */
-            if (g_modbus->write_hold_reg_cb) {
-                g_modbus->write_hold_reg_cb(usSRegHoldBuf, \
+            if (g_modbus->execu_hold_reg_cb) {
+                g_modbus->execu_hold_reg_cb(usSRegHoldBuf, \
                                             WriteHoldStart, \
                                             WriteHoldRegNum);
             }
@@ -233,6 +236,7 @@ eMBErrorCode eMBRegInputCB( UCHAR * pucRegBuffer, \
             break;
         /* write current register values with new values from the protocol stack. */
         case MB_REG_WRITE:
+        case LM_REG_WRITE:
             while (usNRegs > 0) {
                 pusRegInputBuf[iRegIndex] = *pucRegBuffer++ << 8;
                 pusRegInputBuf[iRegIndex] |= *pucRegBuffer++;
@@ -293,6 +297,7 @@ eMBErrorCode eMBRegHoldingCB(   UCHAR * pucRegBuffer, \
 
         /* write current register values with new values from the protocol stack. */
         case MB_REG_WRITE:
+        case LM_REG_WRITE:
             WriteHoldStart = iRegIndex;
             WriteHoldRegNum = usNRegs;
 
@@ -302,8 +307,11 @@ eMBErrorCode eMBRegHoldingCB(   UCHAR * pucRegBuffer, \
                 iRegIndex++;
                 usNRegs--;
             }
-            /* 发送写保持寄存器事件 */
-            lm_event_set(event_write_reg, WRITE_HOLDING_REG_EVENT);
+
+            if (MB_REG_WRITE == eMode) {
+                /* 发送写保持寄存器事件 */
+                lm_event_set(event_write_reg, WRITE_HOLDING_REG_EVENT);
+            }
             break;
         }
     } else {
@@ -366,6 +374,12 @@ eMBErrorCode eMBRegCoilsCB( UCHAR * pucRegBuffer, \
         switch ( eMode ) {
         /* read current coil values from the protocol stack. */
         case MB_REG_READ:
+            /*
+             * 1. iNReg = 2  iRegIndex = 2  iRegBitIndex = 3  usNCoils = 10  pucRegBuffer[0]
+             * 2. iNReg = 2  iRegIndex = 3  iRegBitIndex = 3  usNCoils = 10  pucRegBuffer[1]
+             * 3. usNCoils = 2  pucRegBuffer[1] 10101101 << 6 = 01000000
+             * 4. usNCoils = 2  pucRegBuffer[1] 01000000 >> 6 = 00000001
+             */
             while (iNReg > 0) {
                 *pucRegBuffer++ = xMBUtilGetBits(&pucCoilBuf[iRegIndex++],
                         iRegBitIndex, 8);
@@ -381,6 +395,7 @@ eMBErrorCode eMBRegCoilsCB( UCHAR * pucRegBuffer, \
 
         /* write current coil values with new values from the protocol stack. */
         case MB_REG_WRITE:
+        case LM_REG_WRITE:
             WriteCoilRegNum = usNCoils;
             WriteCoilStart = iRegIndex;
             WriteCoilBitStart = iRegBitIndex;
@@ -397,8 +412,10 @@ eMBErrorCode eMBRegCoilsCB( UCHAR * pucRegBuffer, \
                 xMBUtilSetBits(&pucCoilBuf[iRegIndex++], iRegBitIndex, usNCoils,
                         *pucRegBuffer++);
             }
-            /* 发送写线圈寄存器事件 */
-            lm_event_set(event_write_reg, WRITE_COIL_REG_EVENT);
+            if (MB_REG_WRITE == eMode) {
+                /* 发送写保持寄存器事件 */
+                lm_event_set(event_write_reg, WRITE_COIL_REG_EVENT);
+            }
             break;
         }
     } else {
@@ -459,6 +476,7 @@ eMBErrorCode eMBRegDiscreteCB(  UCHAR * pucRegBuffer, \
             break;
         /* write current discrete values with new values from the protocol stack. */
         case MB_REG_WRITE:
+        case LM_REG_WRITE:
             while (iNReg > 1) {
                 xMBUtilSetBits(&pucDiscreteInputBuf[iRegIndex++], iRegBitIndex, 8,
                         *pucRegBuffer++);
@@ -493,11 +511,11 @@ int lm_modbus_reg_ops (mbRegOpsType type, uint8_t *pBuf, uint16_t addr, uint16_t
      lm_assert(pBuf == NULL);
 
      if (LM_WRITE_COIL_REG == iType) {                      /* 写线圈寄存器 */
-         err = eMBRegCoilsCB(pBuf, addr, num, MB_REG_WRITE);
+         err = eMBRegCoilsCB(pBuf, addr, num, LM_REG_WRITE);
      } else if (LM_WRITE_DISCRETE_INPUT_REG == iType) {     /* 写离散输入寄存器 */
          err = eMBRegDiscreteCB(pBuf, addr, num, MB_REG_WRITE);
      } else if (LM_WRITE_HOLDING_REG == iType) {            /* 写 保持寄存器 */
-         err = eMBRegHoldingCB(pBuf, addr, num, MB_REG_WRITE);
+         err = eMBRegHoldingCB(pBuf, addr, num, LM_REG_WRITE);
      } else if (LM_WRITE_INPUT_REG == iType) {              /* 写输入寄存器 */
          err = eMBRegInputCB(pBuf, addr, num, MB_REG_WRITE);
      } else {

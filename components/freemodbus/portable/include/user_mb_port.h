@@ -14,13 +14,13 @@
  * 寄存器数量可根据项目需求进行调整
  */
 #define S_DISCRETE_INPUT_START              0       /* 离散输入寄存器起始地址 */
-#define S_DISCRETE_INPUT_NDISCRETES         16      /* 离散输入寄存器数量 */
+#define S_DISCRETE_INPUT_NDISCRETES         200     /* 离散输入寄存器数量 */
 #define S_COIL_START                        0       /* 线圈寄存器起始地址 */
-#define S_COIL_NCOILS                       16      /* 线圈寄存器数量 */
+#define S_COIL_NCOILS                       200     /* 线圈寄存器数量 */
 #define S_REG_INPUT_START                   0       /* 输入寄存器起始地址 */
-#define S_REG_INPUT_NREGS                   128     /* 输入寄存器数量 */
+#define S_REG_INPUT_NREGS                   100     /* 输入寄存器数量 */
 #define S_REG_HOLDING_START                 0       /* 保持寄存器起始地址 */
-#define S_REG_HOLDING_NREGS                 128     /* 保持寄存器数量 */
+#define S_REG_HOLDING_NREGS                 100     /* 保持寄存器数量 */
 
 #define READ_COIL_REG                       0x01    /* 01. 读线圈寄存器 */
 #define READ_DISCRETE_INPUT_REG             0x02    /* 02. 读离散输入寄存器 */
@@ -86,7 +86,7 @@ typedef struct {
     /**
      * 写线圈寄存器回调  应用程序注册此函数
      */
-    int (*write_coil_reg_cb) (  uint8_t *pucRegBuffer, \
+    int (*execu_coil_reg_cb) (  uint8_t *pucRegBuffer, \
                                 uint16_t usAddress, \
                                 uint16_t usBitOffset, \
                                 uint16_t usNCoils);
@@ -94,7 +94,7 @@ typedef struct {
     /**
      * 写保持寄存器回调  应用程序注册此函数
      */
-    int (*write_hold_reg_cb) (  uint8_t *pucRegBuffer, \
+    int (*execu_hold_reg_cb) (  uint16_t *pucRegBuffer, \
                                 uint16_t usAddress, \
                                 uint16_t usNRegs);
 } lm_mb_param_t;

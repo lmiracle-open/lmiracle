@@ -219,4 +219,3 @@ static inline void lm_udelay (uint32_t us)
 #endif /* __LMIRACLE_H */
 
 /* end of file */
-
