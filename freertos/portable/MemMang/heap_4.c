@@ -61,10 +61,10 @@ extern int __heap_start__;
 #if( configAPPLICATION_ALLOCATED_HEAP == 1 )
 	/* The application writer has already defined the array used for the RTOS
 	heap - probably so it can be placed in a special segment or address. */
-//	extern uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
-	static uint8_t *ucHeap = (uint8_t *)&__heap_start__;
+	extern uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+//	static uint8_t *ucHeap = (uint8_t *)&__heap_start__;
 #else
-//	static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+	//static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
 	static uint8_t *ucHeap = (uint8_t *)&__heap_start__;
 #endif /* configAPPLICATION_ALLOCATED_HEAP */
 

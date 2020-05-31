@@ -55,11 +55,16 @@
  */
 
 #include <stdbool.h>
-#include "device_registers.h"
 #include "osif.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "devassert.h"
+#include "lmiracle.h"
+
+#ifndef DEV_ASSERT
+#define DEV_ASSERT(e) ((void)0)
+#endif
+
+#define FEATURE_OSIF_FREERTOS_ISR_CONTEXT_METHOD         (1) /* Cortex M device */
 
 #if !defined (USING_OS_FREERTOS)
 #error "Wrong OSIF selected. Please define symbol USING_OS_FREERTOS in project settings or change the OSIF variant"
@@ -95,10 +100,13 @@
  *END**************************************************************************/
 #if FEATURE_OSIF_FREERTOS_ISR_CONTEXT_METHOD == 1
 /* Cortex M device - read ICSR[IPSR] value */
+
 static inline bool osif_IsIsrContext(void)
 {
     bool is_isr = false;
-    uint32_t ipsr_code = (uint32_t)( (S32_SCB->ICSR & S32_SCB_ICSR_VECTACTIVE_MASK) >> S32_SCB_ICSR_VECTACTIVE_SHIFT );
+
+    uint32_t ipsr_code = (uint32_t)( (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos );
+
     if (ipsr_code != 0u)
     {
         is_isr = true;
