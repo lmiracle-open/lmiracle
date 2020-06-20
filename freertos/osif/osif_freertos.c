@@ -60,6 +60,10 @@
 #include "task.h"
 #include "lmiracle.h"
 
+#ifdef S32K
+#include "S32K146.h"
+#endif
+
 #ifndef DEV_ASSERT
 #define DEV_ASSERT(e) ((void)0)
 #endif
@@ -104,8 +108,11 @@
 static inline bool osif_IsIsrContext(void)
 {
     bool is_isr = false;
-
+#ifdef S32K
+    uint32_t ipsr_code = (uint32_t)( (S32_SCB->ICSR & S32_SCB_ICSR_VECTACTIVE_MASK) >> S32_SCB_ICSR_VECTACTIVE_SHIFT  );
+#else
     uint32_t ipsr_code = (uint32_t)( (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos );
+#endif
 
     if (ipsr_code != 0u)
     {
