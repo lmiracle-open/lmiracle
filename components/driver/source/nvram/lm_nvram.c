@@ -54,11 +54,21 @@ int lm_nvram_write (char *name, uint8_t *p_buf, uint32_t offset, size_t len)
             uint32_t j               = 0;
             uint32_t k               = 0;
             uint8_t *p_txbuf         = 0;
+            uint32_t secoffset       = 0;
 
             /* 计算当前的存储地址 */
             current_addr = j + p_zone->addr + offset;
-            block_addr_pre  = p_zone->addr / p_nvram->erasesize *
-                              p_nvram->erasesize;
+            if (current_addr%p_nvram->erasesize) {
+            secoffset = current_addr/p_nvram->erasesize + 1;
+            block_addr_pre  = (p_zone->addr / p_nvram->erasesize * \
+                              p_nvram->erasesize) + 4096*(secoffset-1) - \
+                              p_zone->addr;
+            } else {
+            secoffset = current_addr/p_nvram->erasesize;
+            block_addr_pre  = (p_zone->addr / p_nvram->erasesize *
+                              p_nvram->erasesize) + 4096*secoffset - \
+                              p_zone->addr;
+            }
             block_addr_next = block_addr_pre + p_nvram->erasesize;
 
             /*
