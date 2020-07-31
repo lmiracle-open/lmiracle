@@ -4,6 +4,17 @@
 #include "mini-printf.h"
 #include <stdarg.h>
 #include <string.h>
+#include "lm_drv_s32k_flash.h"
+
+extern void SystemSoftwareReset(void);
+
+#define __S32K_FLASH_NAME               "info"
+#define __FLASH_INFO_ADDR               ((uint32_t)0X00000000)
+#define __S32K_FLASH_SECTOR_SIZE        4096
+#define __CMD_SIZE                      2
+uint8_t cmd[][2] = {
+        { 0xaa, 0x03 },     /* 上位机请求命令*/
+};
 
 /* 定义控制台设备指针 */
 const static lm_console_t *p_console = NULL;
@@ -49,15 +60,34 @@ static void lm_console_data_write (const char data)
  */
 static void lm_shell_run (void *p_arg)
 {
+    uint8_t info[8]={0x44,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+
     lm_kprintf("shell task start... \r\n");
 
     while (1) {
         /* 1.读取串口数据 */
-        uint16_t len = lm_serial_read(p_console->com,
+        uint32_t len = lm_serial_read(p_console->com,
                                       p_console->recv_buf,
                                       p_console->recv_size);
+        
         if (len > 0) {
-            /* 2.处理接收的数据 */
+            /* 2.接收到上位机请求*/
+            if (len == __CMD_SIZE) {
+                if ((p_console->recv_buf[0] == cmd[0][0]) &&\
+                    (p_console->recv_buf[1] == cmd[0][1] )) {
+                    lm_s32k_flash_erase(__S32K_FLASH_NAME,  \
+                                        __FLASH_INFO_ADDR,  \
+                                        __S32K_FLASH_SECTOR_SIZE);
+                    lm_s32k_flash_write(__S32K_FLASH_NAME,  \
+                                        __FLASH_INFO_ADDR,  \
+                                        info,               \
+                                        8,                  \
+                                        &len);
+                    /* 系统复位*/
+                    SystemSoftwareReset();
+                }
+            }
+            /* 3.处理接收的数据 */
             for (int i = 0; i < len; i++) {
                 shellHandler(&g_console, (char)p_console->recv_buf[i]);
             }
