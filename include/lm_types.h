@@ -24,6 +24,10 @@ extern "C" {
 #define __barrier()   __asm__ __volatile__("":::"memory")
 #endif
 
+#ifndef __unused
+#define __unused    __attribute__((unused))
+#endif
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
