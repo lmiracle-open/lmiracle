@@ -19,12 +19,13 @@
 extern "C" {
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 
 #ifndef __barrier
 #define __barrier()   __asm__ __volatile__("":::"memory")
+#endif
+
+#ifndef NULL
+#define NULL ((void *)0)
 #endif
 
 #define LM_TRUE                 1
@@ -38,6 +39,10 @@ extern "C" {
 #define ISSETBIT(val,bit)   (val & (1 << bit))              /* 判断是否置位 */
 
 #define ARRAY_LEN(x)        (sizeof(x)/sizeof((x)[0]))    /* 获取一个数组元素个数 */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

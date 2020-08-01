@@ -21,9 +21,10 @@ extern "C" {
 
 #include "lmiracle.h"
 #include <string.h>
+#include <stdbool.h>
 
 /* 浮点数转换字符串 */
-extern int float_to_str(char *str, float number, uint8_t g, uint8_t l);
+extern int float_to_str(char *str, float number, uint8_t g, uint8_t l, bool flag);
 
 #ifdef __cplusplus
 }
