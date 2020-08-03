@@ -9,6 +9,9 @@ typedef int (*console_output_t)(uint32_t com, const void *data, uint16_t len);
 /* 控制台输入回调函数类型 */
 typedef int (*console_input_t)(uint32_t com, uint8_t *data);
 
+/* iap请求回调函数类型 */
+typedef void (*iap_upgrade_t)(uint8_t *data, uint16_t len);
+
 typedef struct {
     uint32_t stack_size;                    /* 控制台任务栈深度 */
     uint32_t prio;                          /* 控制台任务优先级 */
@@ -31,6 +34,12 @@ typedef struct {
  * @return      错误码
  */
 extern int lm_console_register(const lm_console_t *p_console);
+/**
+ * @brief       IAP升级接口注册
+ * @param       回调
+ * @return      错误码
+ */
+extern int lm_iap_register(iap_upgrade_t iap_cb);
 
 /**
  * @brief       shell初始化
