@@ -33,7 +33,7 @@ typedef struct {
  * @param       p_console,控制台指针
  * @return      错误码
  */
-extern int lm_console_register(const lm_console_t *p_console);
+extern int lm_console_register(lm_console_t *p_console);
 /**
  * @brief       IAP升级接口注册
  * @param       回调

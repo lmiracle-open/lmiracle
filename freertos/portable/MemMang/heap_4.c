@@ -43,7 +43,10 @@ task.h is included from an application file. */
 #include "FreeRTOS.h"
 #include "task.h"
 
-extern int __heap_start__;
+/* todo: 此处后续需要统一 暂时先这样 */
+#ifndef CPU_MIMXRT1052CVL5B
+    extern int __heap_start__;
+#endif
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
@@ -64,8 +67,14 @@ extern int __heap_start__;
 	extern uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
 //	static uint8_t *ucHeap = (uint8_t *)&__heap_start__;
 #else
-	//static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+
+/* todo: 此处后续需要统一 暂时先这样 */
+#if (CPU_MIMXRT1052CVL5B == 1)
+    static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+#else
 	static uint8_t *ucHeap = (uint8_t *)&__heap_start__;
+#endif
+
 #endif /* configAPPLICATION_ALLOCATED_HEAP */
 
 /* Define the linked list structure.  This is used to link free blocks in order

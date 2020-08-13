@@ -7,7 +7,7 @@
 
 
 /* 定义控制台设备指针 */
-const static lm_console_t *p_console = NULL;
+static lm_console_t *p_console = NULL;
 
 /* 回调 */
 static  iap_upgrade_t p_iap_upgrade = NULL;
@@ -78,7 +78,7 @@ static void lm_shell_run (void *p_arg)
 /**
  * 控制台接口注册
  */
-int lm_console_register(const lm_console_t *p_cole)
+int lm_console_register(lm_console_t *p_cole)
 {
     struct lm_serial_info serial_info;
 

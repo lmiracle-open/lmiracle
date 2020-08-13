@@ -64,6 +64,10 @@
 #include "S32K146.h"
 #endif
 
+#ifdef CPU_MIMXRT1052CVL5B
+#include "MIMXRT1052.h"
+#endif
+
 #ifndef DEV_ASSERT
 #define DEV_ASSERT(e) ((void)0)
 #endif
