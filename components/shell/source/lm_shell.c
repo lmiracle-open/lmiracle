@@ -78,7 +78,7 @@ static void lm_shell_run (void *p_arg)
 /**
  * 控制台接口注册
  */
-int lm_console_register(lm_console_t *p_cole)
+int lm_console_register(const lm_console_t *p_cole)
 {
     struct lm_serial_info serial_info;
 

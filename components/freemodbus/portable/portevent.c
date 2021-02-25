@@ -25,45 +25,54 @@
 #include "lmiracle.h"
 
 /* 定义事件实体 */
-static lm_devent_t     slave_event = NULL;
+static lm_devent_t     __g_mb_slave_event = NULL;
 
+/**
+ * @brief modbus事件初始化
+ */
 BOOL
 xMBPortEventInit( void )
 {
-    slave_event = lm_event_create();            /* 创建事件标志组 */
-
-    /* 1.检查输入参数是否有效 */
-    if (unlikely(NULL == slave_event)) {
-        return FALSE;
-    }
+    /* 1. 创建modbus事件标志组 */
+    __g_mb_slave_event = lm_event_create();
+    lm_assert(NULL == __g_mb_slave_event);
 
     return TRUE;
 }
 
+/**
+ * @brief modbus事件发送
+ */
 BOOL
 xMBPortEventPost( eMBEventType eEvent )
 {
-    lm_assert(NULL == slave_event);
+    /* 1. 检查输入参数是否有效 */
+    lm_assert(NULL == __g_mb_slave_event);
 
-    lm_event_set(slave_event, eEvent);          /* 设置事件位 */
+    /* 2. 设置事件位 */
+    lm_event_set(__g_mb_slave_event, eEvent);
 
     return TRUE;
 }
 
+/**
+ * @brief modbus事件获取
+ */
 BOOL
 xMBPortEventGet( eMBEventType * eEvent )
 {
     lm_bits_t recv_event;
 
-    lm_assert(NULL == slave_event);
+    /* 1. 检查输入参数是否有效 */
+    lm_assert(NULL == __g_mb_slave_event);
 
-    /* waiting forever OS event */
-    recv_event = lm_event_wait(  slave_event,
+    /* 2. 等待事件发生 */
+    recv_event = lm_event_wait(  __g_mb_slave_event,
                     EV_READY | EV_FRAME_RECEIVED | EV_EXECUTE | EV_FRAME_SENT,
-                    pdTRUE,     /* 退出时清除事件位 */
-                    pdFALSE,    /* 以上事件只要满足其一就可以 */
+                    LM_TYPE_TRUE,     /* 退出时清除事件位 */
+                    LM_TYPE_FALSE,    /* 以上事件只要满足其一就可以 */
                     LM_SEM_WAIT_FOREVER);
-
+    /* 3. 分发事件 */
     switch (recv_event) {
     case EV_READY:
         *eEvent = EV_READY;
@@ -81,3 +90,5 @@ xMBPortEventGet( eMBEventType * eEvent )
 
     return TRUE;
 }
+
+/* end of file */
