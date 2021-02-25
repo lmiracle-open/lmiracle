@@ -40,12 +40,20 @@
  */
 #define lm_scheduler_start()                vTaskStartScheduler()
 
+/* 返回类型 */
+#define LM_TYPE_PASS                        pdPASS
+#define LM_TYPE_FAIL                        pdFAIL
+#define LM_TYPE_TRUE                        pdTRUE
+#define LM_TYPE_FALSE                       pdFALSE
+typedef BaseType_t lm_base_t ;
+
 /**
  * @brief 任务延时
  *
  * @param[tick] tick
  */
 #define lm_task_delay(tick)                 vTaskDelay(tick);
+
 
 typedef TickType_t lm_tick_t ;
 

@@ -28,6 +28,10 @@ extern "C" {
 #define __unused    __attribute__((unused))
 #endif
 
+#ifndef __default
+#define __default   __attribute__((weak))
+#endif
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
