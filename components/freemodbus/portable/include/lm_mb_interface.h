@@ -27,32 +27,7 @@ typedef struct {
     uint32_t rtask_prio;                                /* 串口接收任务优先级 */
 } lm_mb_serial_t;
 
-/* modbus参数注册结构体 */
-typedef struct {
-    uint32_t ptask_stack_size;                          /* modbus轮询任务栈深度 */
-    uint32_t ptask_prio;                                /* modbus轮询任务优先级 */
-    eMBMode  embmode;                                   /* modbus模式  */
-    UCHAR  slave_addr;                                  /* 从机地址 */
-    UCHAR  uport;                                       /* 串口号 */
-    eMBParity  embparity;                               /* 校验模式 */
-    ULONG ubaud;                                        /* 波特率 */
-} lm_mb_param_t;
-
 /***************************** modbus从机对外提供接口  *****************************/
-
-/**
- * @brief       modbus协议初始化
- * @param       None
- * @return      错误码
- */
-extern int lm_mb_protocol_init (void);
-
-/**
- * @brief       modbus参数注册接口
- * @param       mb_param,参数指针
- * @return      错误码
- */
-extern int lm_mb_param_register (const lm_mb_param_t *mb_param);
 
 /**
  * @brief       串口底层接口注册

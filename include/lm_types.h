@@ -39,6 +39,11 @@ extern "C" {
 #define LM_TRUE                 1
 #define LM_FALSE                0
 
+/* 字节交换函数 */
+#define BYTE_SWAP16(x)      __builtin_bswap16(x)
+#define BYTE_SWAP32(x)      __builtin_bswap32(x)
+#define BYTE_SWAP64(x)      __builtin_bswap64(x)
+
 #define likely(exp)         __builtin_expect(!!(exp), 1)    /* 期望位真 */
 #define unlikely(Exp)       __builtin_expect(!!(Exp), 0)    /* 期望为假 */
 
