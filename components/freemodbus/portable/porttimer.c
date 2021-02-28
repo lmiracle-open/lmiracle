@@ -40,20 +40,15 @@ const static lm_mb_timer_t *__g_mb_timer = NULL;
  */
 BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
 {
-    /**
-     * 1.计算定时中断时间
-     * [1.1] 定时器以50us基数
-     * [1.2] modbus协议规定报文帧时长至少3.5个字符间隔
-     * [1.3] 串口发送1个字符需要传输 1(起始位)+8(数据位)+1(校验位)+1(停止位)=11位
-     * [1.4] 发送3.5个字符需要 3.5*11=38.5位
-     * [1.5] if 波特率=9600 则1s传输9600位  传输1位需要大约 1/9600=0.104ms
-     * [1.6] 传输38.5位大约需要 38.5*0.104=4.01ms 这个时间就是定时器中断时间 要比这个稍微大一点
-     * [1.7] 以50us为计数周期 则4ms/50us=80就会溢出中断
-     * [1.8] 在9600的波特率下，usTim1Timerout50us = 80
-     * [1.9] 通用公式 timeout = (usTim1Timerout50us + 10) / 20 = 4.5ms 刚好比4ms大一点
-     *
-     */
-    uint32_t timeout = (usTim1Timerout50us + 10) / 20 + 3;
+    uint32_t timeout = 0;
+
+    /* 1. 计算超时时间 具体算法由用户自己实现 */
+    if (__g_mb_timer->timeout_calculation) {
+        timeout = __g_mb_timer->timeout_calculation(usTim1Timerout50us);
+    } else {
+        /* todo: 如果用户没有实现计算函数 则使用默认公式计算 */
+        timeout = ((usTim1Timerout50us + 10) / 20 + 3);
+    }
 
     /* 2.定时器到期时间设置 */
     if (__g_mb_timer->timer_expired_set) {
