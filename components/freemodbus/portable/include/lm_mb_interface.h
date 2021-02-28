@@ -13,9 +13,22 @@
 /* modbus定时器注册结构体 */
 typedef struct {
     uint32_t timer_id;                                  /* 定时器ID */
-    /* 定时器到期时间设置回调 */
+
+    /**
+     * 定时器到期时间设置回调
+     */
     int (*timer_expired_set) (uint32_t id, uint32_t timeout);
-    int (*timer_sleep) (uint32_t id, bool enable);      /* 定时器睡眠回调 */
+
+    /**
+     * 定时器睡眠回调
+     */
+    int (*timer_sleep) (uint32_t id, bool enable);
+
+    /**
+     * 定时器超时时间计算回调
+     */
+    uint32_t (*timeout_calculation) (uint16_t time);
+
 } lm_mb_timer_t;
 
 /* modbus串口注册结构体 */
