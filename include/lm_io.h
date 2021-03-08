@@ -1,6 +1,24 @@
+/********************************* Copyright(c) ********************************
+*
+*                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
+*
+* File Name     : lm_io.h
+* Change Logs   :
+* Date          Author          Notes
+* 2019-11-06    linxuew         V1.0    first version
+*******************************************************************************/
+
+/*******************************************************************************
+* Description   : IO操作相关接口
+*******************************************************************************/
 
 #ifndef __LM_IO_H
 #define __LM_IO_H
+
+#include "lm_types.h"
+
+LM_BEGIN_EXTERN_C
 
 #define CONFIG_ARM_DMA_MEM_BUFFERABLE
 
@@ -93,7 +111,7 @@ static inline uint32_t __raw_readl(const volatile void __iomem *addr)
 #define writesw(p,d,l)      __raw_writesw(p,d,l)
 #define writesl(p,d,l)      __raw_writesl(p,d,l)
 
-
+LM_END_EXTERN_C
 
 #endif /* __LM_IO_H */
 

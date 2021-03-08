@@ -1,30 +1,48 @@
 /********************************* Copyright(c) ********************************
 *
 *                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
 *
 * File Name     : lm_kservice.h
 * Change Logs   :
-* Date         Author      Notes
-* 2019-06-07   terryall    V1.0    first version
+* Date          Author          Notes
+* 2019-06-07    terryall        V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 内核相关接口
+* Description   : 内核相关服务模块
 *******************************************************************************/
 
 #ifndef __LM_KSERVICE_H
 #define __LM_KSERVICE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "lmiracle.h"
 
-extern void lm_kprintf(const char *fmt, ...);
+LM_BEGIN_EXTERN_C
 
-#ifdef __cplusplus
-}
-#endif /* __LM_KSERVICE_H */
+/**
+ * @brief 格式化输出参数设置
+ *
+ * @param[in] com       格式化输出串口号
+ * @param[in] buf       格式化输出缓存指针
+ * @param[in] size      格式化输出缓存长度
+ *
+ * @return  错误码
+ */
+extern int lm_stdout_param_set (uint8_t com, uint8_t *buf, uint16_t size);
 
-#endif
+/**
+ * @brief 格式化输出
+ *
+ * @param[in]   fmt     格式化字符串
+ * @param[in]   ...     可变参数
+ *
+ * @return  None
+ */
+extern void lm_kprintf (const char *fmt, ...);
+
+LM_END_EXTERN_C
+
+#endif  /* __LM_KSERVICE_H */
 
 /* end of file */

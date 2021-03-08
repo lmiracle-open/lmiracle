@@ -1,39 +1,67 @@
+/********************************* Copyright(c) ********************************
+*
+*                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
+*
+* File Name     : lmiracle.h
+* Change Logs   :
+* Date          Author          Notes
+* 2019-06-07    terryall        V1.0    first version
+*******************************************************************************/
+
+/*******************************************************************************
+* Description   : lmiracle
+*******************************************************************************/
+
 #ifndef __LMIRACLE_H
 #define __LMIRACLE_H
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "lm_error.h"
-#include "lm_io.h"
-#include "lm_bitops.h"
-#include "lm_types.h"
 #include "osif.h"
 #include "semphr.h"
 #include "event_groups.h"
+
+#include "lm_error.h"
+#include "lm_assert.h"
+#include "lm_io.h"
+#include "lm_bitops.h"
+#include "lm_types.h"
+
+LM_BEGIN_EXTERN_C
+
 /**
  * @brief 创建动态任务
- *
  */
-#define lm_task_create(pcName, pxTaskCode, pvParameters, usStackDepth,  uxPriority) \
-                                      xTaskCreate(pxTaskCode, \
-                                                  pcName, \
-                                                  usStackDepth, \
-                                                  pvParameters, \
-                                                  uxPriority,    \
-                                                  NULL )
+#define lm_task_create(         pcName,         \
+                                pxTaskCode,     \
+                                usStackDepth,   \
+                                uxPriority,     \
+                                pvParameters)   \
+                                xTaskCreate(        pxTaskCode,     \
+                                                    pcName,         \
+                                                    usStackDepth,   \
+                                                    pvParameters,   \
+                                                    uxPriority,     \
+                                                    NULL)
 
 /**
  * @brief 创建静态任务
- *
  */
-#define lm_task_create_static(pcName, pxTaskCode, pvParameters, usStackDepth, uxPriority, puxStackBuffer, pxTaskBuffer) \
-                                      xTaskCreateStatic(pxTaskCode, \
-                                                  pcName, \
-                                                  usStackDepth, \
-                                                  pvParameters, \
-                                                  uxPriority,    \
-                                                  puxStackBuffer, \
-                                                  pxTaskBuffer)
+#define lm_task_create_static(  pcName,         \
+                                pxTaskCode,     \
+                                usStackDepth,   \
+                                uxPriority,     \
+                                puxStackBuffer, \
+                                pxTaskBuffer,   \
+                                pvParameters)   \
+                                xTaskCreateStatic(  pxTaskCode,     \
+                                                    pcName,         \
+                                                    usStackDepth,   \
+                                                    pvParameters,   \
+                                                    uxPriority,     \
+                                                    puxStackBuffer, \
+                                                    pxTaskBuffer)
 
 /**
  * @brief 启动调度器
@@ -45,6 +73,7 @@
 #define LM_TYPE_FAIL                        pdFAIL
 #define LM_TYPE_TRUE                        pdTRUE
 #define LM_TYPE_FALSE                       pdFALSE
+
 typedef BaseType_t lm_base_t ;
 
 /**
@@ -53,7 +82,6 @@ typedef BaseType_t lm_base_t ;
  * @param[tick] tick
  */
 #define lm_task_delay(tick)                 vTaskDelay(tick);
-
 
 typedef TickType_t lm_tick_t ;
 
@@ -96,14 +124,12 @@ typedef  mutex_t lm_mutex_t;
  */
 typedef semaphore_t lm_sem_t;
 
-
 /**
  * @brief 创建计数型信号量
  *
  * @return [lm_sem_t]
  */
 #define lm_sem_create(count, value)         OSIF_SemaCreate(count, value)
-
 
 /**
  * @brief 释放信号量
@@ -176,20 +202,16 @@ typedef EventBits_t         lm_bits_t;
  */
 #define lm_critical_enter()                 vPortEnterCritical()
 
-
 /**
  * @brief 退出临界区
  */
 #define lm_critical_exit()                  vPortExitCritical()
-
 
 /**
  * @brief 判断是否是中断上下文
  */
 //#define lm_is_int_context()                 osif_IsIsrContext()
 #define lm_is_int_context()                 0
-
-typedef TickType_t     lm_tick_t;
 
 /**
  * @brief 获取当前tick值
@@ -221,8 +243,9 @@ static inline void lm_udelay (uint32_t us)
         volatile uint32_t i = 26;
         while(i--);
     }
-
 }
+
+LM_END_EXTERN_C
 
 #endif /* __LMIRACLE_H */
 

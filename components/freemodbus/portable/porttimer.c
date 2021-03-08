@@ -31,7 +31,7 @@
 /* ----------------------- static functions ---------------------------------*/
 
 /* 定义mb定时器指针 */
-const static lm_mb_timer_t *__g_mb_timer = NULL;
+const static lm_mb_timer_t *__gp_mb_timer = NULL;
 
 /* ----------------------- Start implementation -----------------------------*/
 
@@ -42,17 +42,20 @@ BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
 {
     uint32_t timeout = 0;
 
-    /* 1. 计算超时时间 具体算法由用户自己实现 */
-    if (__g_mb_timer->timeout_calculation) {
-        timeout = __g_mb_timer->timeout_calculation(usTim1Timerout50us);
+    /* 1. 检查输入参数是否有效 */
+    lm_assert(NULL != __gp_mb_timer);
+
+    /* 2. 计算超时时间 具体算法由用户自己实现 */
+    if (__gp_mb_timer->timeout_calculation) {
+        timeout = __gp_mb_timer->timeout_calculation(usTim1Timerout50us);
     } else {
         /* todo: 如果用户没有实现计算函数 则使用默认公式计算 */
         timeout = ((usTim1Timerout50us + 10) / 20 + 3);
     }
 
-    /* 2.定时器到期时间设置 */
-    if (__g_mb_timer->timer_expired_set) {
-        __g_mb_timer->timer_expired_set(__g_mb_timer->timer_id, timeout);
+    /* 3. 定时器到期时间设置 */
+    if (__gp_mb_timer->timer_expired_set) {
+        __gp_mb_timer->timer_expired_set(__gp_mb_timer->timer_id, timeout);
         return TRUE;
     }
 
@@ -64,8 +67,8 @@ BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
  */
 void vMBPortTimersEnable()
 {
-    if (__g_mb_timer->timer_sleep) {
-        __g_mb_timer->timer_sleep(__g_mb_timer->timer_id, true);
+    if (__gp_mb_timer->timer_sleep) {
+        __gp_mb_timer->timer_sleep(__gp_mb_timer->timer_id, true);
     }
 }
 
@@ -74,8 +77,8 @@ void vMBPortTimersEnable()
  */
 void vMBPortTimersDisable()
 {
-    if (__g_mb_timer->timer_sleep) {
-        __g_mb_timer->timer_sleep(__g_mb_timer->timer_id, false);
+    if (__gp_mb_timer->timer_sleep) {
+        __gp_mb_timer->timer_sleep(__gp_mb_timer->timer_id, false);
     }
 }
 
@@ -95,10 +98,10 @@ int lm_mb_timer_expired_cb (void)
 int lm_mb_timer_register (const lm_mb_timer_t *p_mb_timer)
 {
     /* 1.检查输入参数是否有效 */
-    lm_assert(NULL == p_mb_timer);
+    lm_assert(NULL != p_mb_timer);
 
     /* 2.注册 */
-    __g_mb_timer = p_mb_timer;
+    __gp_mb_timer = p_mb_timer;
 
     return LM_OK;
 }

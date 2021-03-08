@@ -1,5 +1,19 @@
+/********************************* Copyright(c) ********************************
+*
+*                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
+*
+* File Name     : lm_ringbuf.c
+* Change Logs   :
+* Date          Author          Notes
+* 2019-06-07    linxuew         V1.0    first version
+*******************************************************************************/
 
-#include <lm_ringbuf.h>
+/*******************************************************************************
+* Description   : 环形缓冲区模块
+*******************************************************************************/
+
+#include "lm_ringbuf.h"
 #include "lmiracle.h"
 #include <string.h>
 
@@ -31,7 +45,7 @@ int lm_ringbuf_init (struct lm_ringbuf *p_rb, uint8_t *pool, size_t size)
 }
 
 /**
- * 将数据写入环形缓存区
+ * @brief 将数据写入环形缓存区
  */
 size_t lm_ringbuf_put (struct lm_ringbuf *p_rb,
                        const uint8_t     *ptr,
@@ -79,9 +93,7 @@ size_t lm_ringbuf_put (struct lm_ringbuf *p_rb,
 }
 
 /**
- *
- * 将数据写入环形缓存区,如果满了，覆盖以前数据
- *
+ * @brief 将数据写入环形缓存区,如果满了，覆盖以前数据
  */
 size_t lm_ringbuf_put_force (struct lm_ringbuf *p_rb,
                              const uint8_t     *ptr,
@@ -136,7 +148,7 @@ size_t lm_ringbuf_put_force (struct lm_ringbuf *p_rb,
 }
 
 /**
- * 获取数据
+ * @brief 从缓冲区获取数据
  */
 size_t lm_ringbuf_get (struct lm_ringbuf *p_rb,
                        uint8_t           *ptr,
@@ -184,7 +196,7 @@ size_t lm_ringbuf_get (struct lm_ringbuf *p_rb,
 }
 
 /**
- * 将一个字节写入到环形缓存区
+ * @brief 将一个字节写入到环形缓存区
  */
 size_t lm_ringbuf_putchar (struct lm_ringbuf *p_rb, const uint8_t ch)
 {
@@ -212,9 +224,8 @@ size_t lm_ringbuf_putchar (struct lm_ringbuf *p_rb, const uint8_t ch)
     return 1;
 }
 
-
 /**
- * put a character into ring buffer
+ * @brief put a character into ring buffer
  *
  * When the buffer is full, it will discard one old data.
  */
@@ -252,7 +263,7 @@ size_t lm_ringbuf_putchar_force(struct lm_ringbuf *p_rb, const uint8_t ch)
 }
 
 /**
- * get a character from a ringbuffer
+ * @brief get a character from a ringbuffer
  */
 size_t lm_ringbuf_getchar(struct lm_ringbuf *p_rb, uint8_t *ch)
 {
@@ -282,7 +293,7 @@ size_t lm_ringbuf_getchar(struct lm_ringbuf *p_rb, uint8_t *ch)
 }
 
 /** 
- * 获取环形缓存区数据长度
+ * @brief 获取环形缓存区数据长度
  */
 size_t lm_ringbuf_data_len (struct lm_ringbuf *p_rb)
 {
@@ -302,7 +313,7 @@ size_t lm_ringbuf_data_len (struct lm_ringbuf *p_rb)
 }
 
 /** 
- * 复位环形缓存区
+ * @brief 复位环形缓存区
  */
 void lm_ringbuf_reset (struct lm_ringbuf *p_rb)
 {
