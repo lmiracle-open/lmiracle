@@ -15,7 +15,6 @@
 #include "shell_ext.h"
 
 #include "mini-printf.h"
-#include "lm_kservice.h"
 
 #if SHELL_USING_CMD_EXPORT == 1
 
@@ -1689,34 +1688,4 @@ SHELL_EXPORT_CMD(
 SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC)|SHELL_CMD_DISABLE_RETURN,
 clear, shellClear, clear console);
 
-/**
- * @brief shell 字符串测试
- */
-void str_test(void)
-{
-    Shell *shell = shellGetCurrent();
-    if (shell)
-    {
-        shellWriteString(shell, "\"hahaha lmiracle platform test!!! heiheihei\"");
-    }
-}
-SHELL_EXPORT_CMD(
-SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC)|SHELL_CMD_DISABLE_RETURN,
-string, str_test, str output test);
-
-/**
- * @brief shell 函数测试
- */
-int func_test(int argc, char *argv[])
-{
-    lm_kprintf("param num: %d \r\n", argc);
-    for (int i = 1; i < argc; i++) {
-        lm_kprintf("%s\r\n", argv[i]);
-    }
-
-    return LM_OK;
-}
-
-SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN), \
-func, func_test, func test);
-
+/* end of file */

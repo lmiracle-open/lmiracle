@@ -1,30 +1,25 @@
 /********************************* Copyright(c) ********************************
 *
 *                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
 *
 * File Name     : lm_softimer.h
 * Change Logs   :
-* Date         Author      Notes
-* 2019-06-07   terryall     V1.0    first version
+* Date          Author          Notes
+* 2019-06-07    terryall        V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 软件定时器
+* Description   : 软件定时器模块
 *******************************************************************************/
 
 #ifndef __LM_SOFTIMER_H
 #define __LM_SOFTIMER_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "FreeRTOS.h"
 #include "timers.h"
 #include "lmiracle.h"
-#include "lm_error.h"
-#include "lm_types.h"
-#include <stdbool.h>
+
+LM_BEGIN_EXTERN_C
 
 #define SOFTIMER_RELOAD_ENABLE          pdTRUE      /* 软定时器重复加载使能 */
 #define SOFTIMER_RELOAD_DISABLE         pdFAIL      /* 软定时器重复加载关闭 */
@@ -37,10 +32,12 @@ typedef void (*softimer_handle_t)(lm_timer_t timer);
 
 /**
  * @brief 创建定时器
- * @param   handle,定时器回调函数
- *          reload,重复加载标记
- *          ms,定时ms数
- * @return 成功：定时器指针  失败：NULL
+ *
+ * @param[in] handle    定时器回调函数
+ * @param[in] reload    重复加载标记
+ * @param[in] ms        定时ms数
+ *
+ * @return  定时器句柄
  */
 static inline
 lm_timer_t lm_softimer_create(softimer_handle_t handle, uint8_t reload, uint16_t ms)
@@ -62,9 +59,11 @@ lm_timer_t lm_softimer_create(softimer_handle_t handle, uint8_t reload, uint16_t
 
 /**
  * @brief 启动定时器
- * @param   timer,定时器指针
- *          isr,中断调用使能   (1,中断, 0,非中断)
- * @return 错误码
+ *
+ * @param[in] timer 定时器指针
+ * @param[in] isr   中断调用使能   (1,中断, 0,非中断)
+ *
+ * @return  错误码
  */
 static inline
 int lm_softimer_start(lm_timer_t timer, bool isr)
@@ -84,9 +83,11 @@ int lm_softimer_start(lm_timer_t timer, bool isr)
 
 /**
  * @brief 停止定时器
- * @param   timer,定时器指针
- *          isr,中断调用使能   (1,中断, 0,非中断)
- * @return 错误码
+ *
+ * @param[in] timer 定时器指针
+ * @param[in] isr   中断调用使能   (1,中断, 0,非中断)
+ *
+ * @return  错误码
  */
 static inline
 int lm_softimer_stop(lm_timer_t timer, uint8_t isr)
@@ -106,9 +107,11 @@ int lm_softimer_stop(lm_timer_t timer, uint8_t isr)
 
 /**
  * @brief 复位定时器
- * @param   timer,定时器指针
- *          isr,中断调用使能   (1,中断, 0,非中断)
- * @return 错误码
+ *
+ * @param[in] timer 定时器指针
+ * @param[in] isr   中断调用使能   (1,中断, 0,非中断)
+ *
+ * @return  错误码
  */
 static inline
 int lm_softimer_reset(lm_timer_t timer, uint8_t isr)
@@ -128,8 +131,10 @@ int lm_softimer_reset(lm_timer_t timer, uint8_t isr)
 
 /**
  * @brief 删除定时器
- * @param   timer,定时器指针
- * @return None
+ *
+ * @param[in] timer  定时器指针
+ *
+ * @return  None
  */
 static inline
 void lm_sorftimer_delete(lm_timer_t timer)
@@ -137,9 +142,7 @@ void lm_sorftimer_delete(lm_timer_t timer)
     xTimerDelete(timer, 0);
 }
 
-#ifdef __cplusplus
-}
-#endif
+LM_END_EXTERN_C
 
 #endif /* __LM_SOFTIMER_H */
 

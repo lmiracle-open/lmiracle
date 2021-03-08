@@ -1,36 +1,40 @@
 /********************************* Copyright(c) ********************************
 *
 *                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
 *
 * File Name     : lm_heap.h
 * Change Logs   :
-* Date         Author      Notes
-* 2019-06-07   terryall    V1.0    first version
+* Date          Author          Notes
+* 2019-06-07    terryall        V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 内存管理
+* Description   : 内存管理模块
 *******************************************************************************/
 
 #ifndef __LM_HEAP_H
 #define __LM_HEAP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif  /* __cplusplus  */
-
 #include "FreeRTOS.h"
+
+LM_BEGIN_EXTERN_C
 
 /**
  * @brief 申请动态内存
- * @param 申请内存字节数
- * @return 成功：内存指针  失败：NULL
+ *
+ * @param[in]   size    申请字节数
+ *
+ * @return  内存指针
  */
 #define lm_mem_alloc(size)      pvPortMalloc(size)
 
 /**
  * @brief 释放动态内存
- * @param 内存指针
+ *
+ * @param[in]   pv    内存指针
+ *
+ * @return  None
  */
 #define lm_mem_free(pv)                                                        \
     do {                                                                       \
@@ -42,13 +46,14 @@ extern "C" {
 
 /**
  * @brief 获取当前空闲的堆空间
- * @return 剩余空间值
+ *
+ * @param[in]   None
+ *
+ * @return  剩余空间值
  */
 #define lm_mem_freesize_get()   xPortGetFreeHeapSize()
 
-#ifdef __cplusplus
-}
-#endif  /* __cplusplus  */
+LM_END_EXTERN_C
 
 #endif  /* __LM_HEAP_H */
 

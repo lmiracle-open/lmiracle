@@ -36,10 +36,10 @@
 /* ----------------------- static functions ---------------------------------*/
 
 /* 定义modbus串口指针 */
-const static lm_mb_serial_t *__g_mb_serial = NULL;
+const static lm_mb_serial_t *__gp_mb_serial = NULL;
 
 /* 定义modbus串口事件实体 */
-static lm_devent_t __g_mb_serial_event = NULL;
+static lm_devent_t __gp_mb_serial_event = NULL;
 
 /* ----------------------- static functions ---------------------------------*/
 
@@ -53,16 +53,13 @@ static void prvvUARTRxISR(void);
  */
 void vMBPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 {
-    /* 1.检查输入参数是否有效 */
-    lm_assert(NULL == __g_mb_serial);
-
-    /* 2.是否使能串口发送 */
+    /* 1. 是否使能串口发送 */
     if (xTxEnable) {
         /* 发送串口开始传输事件 */
-        lm_event_set(__g_mb_serial_event, MB_SERIAL_TRANS_EVENT);
+        lm_event_set(__gp_mb_serial_event, MB_SERIAL_TRANS_EVENT);
     } else {
         /* 停止串口传输  */
-        lm_event_wait(  __g_mb_serial_event, \
+        lm_event_wait(  __gp_mb_serial_event, \
                         MB_SERIAL_TRANS_EVENT, \
                         LM_TYPE_TRUE, \
                         LM_TYPE_FALSE, \
@@ -84,13 +81,8 @@ void vMBPortClose(void)
  */
 BOOL xMBPortSerialPutByte(CHAR ucByte)
 {
-    /* 1.检查输入参数是否有效 */
-    lm_assert(NULL == __g_mb_serial);
-
-    /* 2.发送数据 */
-    lm_serial_write(__g_mb_serial->com, (const void *)&ucByte, 1);
-
-    return TRUE;
+    /* 1. 发送数据 */
+    return lm_serial_write(__gp_mb_serial->com, (const void *)&ucByte, 1);
 }
 
 /**
@@ -98,13 +90,8 @@ BOOL xMBPortSerialPutByte(CHAR ucByte)
  */
 BOOL xMBPortSerialGetByte(CHAR * pucByte)
 {
-    /* 1.检查输入参数是否有效 */
-    lm_assert(NULL == __g_mb_serial);
-
-    /* 2.接收数据 */
-    lm_serial_read(__g_mb_serial->com, (uint8_t *)pucByte, 1);
-
-    return TRUE;
+    /* 1. 接收数据 */
+    return lm_serial_read(__gp_mb_serial->com, (uint8_t *)pucByte, 1);
 }
 
 /* 
@@ -137,7 +124,7 @@ static void __mb_serial_trans_task (void* parameter)
 {
     while (1) {
         /* 等待modbus串口传输开始事件 */
-        lm_event_wait(  __g_mb_serial_event, \
+        lm_event_wait(  __gp_mb_serial_event, \
                         MB_SERIAL_TRANS_EVENT, \
                         LM_TYPE_FALSE, \
                         LM_TYPE_FALSE, \
@@ -164,10 +151,9 @@ static void __mb_serial_read_task (void* parameter)
 BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
         eMBParity eParity)
 {
-    lm_base_t iReturn = LM_TYPE_PASS;
-    struct lm_serial_info serial_info;
+    int ret = LM_OK;
 
-    (void)iReturn;
+    struct lm_serial_info serial_info;
 
     /* 1.获取串口默认信息 */
     lm_serial_get_info(ucPORT, &serial_info);
@@ -182,24 +168,24 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
     lm_serial_set_info(ucPORT, (const struct lm_serial_info *)&serial_info);
 
     /* 3.创建modbus串口传输事件 */
-    __g_mb_serial_event = lm_event_create();
-    lm_assert(NULL == __g_mb_serial_event);
+    __gp_mb_serial_event = lm_event_create();
+    lm_assert(NULL != __gp_mb_serial_event);
 
     /* 4.创建modbus从机串口发送数据任务 */
-    iReturn = lm_task_create(   "serial_trans",                     \
-                                __mb_serial_trans_task,             \
-                                NULL,                               \
-                                __g_mb_serial->stask_stack_size,    \
-                                __g_mb_serial->stask_prio);
-    lm_assert(LM_TYPE_FAIL == iReturn);
+    ret = lm_task_create(   "serial_trans",                     \
+                            __mb_serial_trans_task,             \
+                            __gp_mb_serial->stask_stack_size,   \
+                            __gp_mb_serial->stask_prio,         \
+                            NULL);
+    lm_assert(LM_TYPE_FAIL != (lm_base_t)ret);
 
     /* 5.创建modbus从机串口读取数据任务 */
-    iReturn = lm_task_create(   "serial_recv",                      \
-                                __mb_serial_read_task,              \
-                                NULL,                               \
-                                __g_mb_serial->rtask_stack_size,    \
-                                __g_mb_serial->rtask_prio);
-    lm_assert(LM_TYPE_FAIL == iReturn);
+    ret = lm_task_create(   "serial_recv",                      \
+                            __mb_serial_read_task,              \
+                            __gp_mb_serial->rtask_stack_size,   \
+                            __gp_mb_serial->rtask_prio,         \
+                            NULL);
+    lm_assert(LM_TYPE_FAIL != (lm_base_t)ret);
 
     return TRUE;
 }
@@ -210,10 +196,10 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 int lm_mb_serial_register (const lm_mb_serial_t *p_mb_serial)
 {
     /* 1.检查输入参数是否有效 */
-    lm_assert(NULL == p_mb_serial);
+    lm_assert(NULL != p_mb_serial);
 
     /* 2.注册 */
-    __g_mb_serial = p_mb_serial;
+    __gp_mb_serial = p_mb_serial;
 
     return LM_OK;
 }

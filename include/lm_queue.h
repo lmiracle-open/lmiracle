@@ -1,38 +1,36 @@
 /********************************* Copyright(c) ********************************
 *
 *                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
 *
 * File Name     : lm_queue.h
 * Change Logs   :
-* Date         Author      Notes
-* 2019-06-07   terryall     V1.0    first version
+* Date          Author          Notes
+* 2019-06-07    terryall        V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 队列
+* Description   : 队列模块
 *******************************************************************************/
 
 #ifndef __LM_QUEUE_H
 #define __LM_QUEUE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "FreeRTOS.h"
 #include "queue.h"
 #include "lmiracle.h"
-#include "lm_error.h"
-#include "lm_types.h"
-#include <stdbool.h>
 
-typedef QueueHandle_t lm_queue_t;   /* 队列数据类型 */
+LM_BEGIN_EXTERN_C
+
+/* 队列数据类型 */
+typedef QueueHandle_t lm_queue_t;
 
 /**
  * @brief 创建队列
- * @param   len,队列长度
- *          item_size,项目字节数
- * @return 成功：队列指针  失败：NULL
+ *
+ * @param[in] len       队列长度
+ * @param[in] item_size 项目字节数
+ *
+ * @return  队列句柄
  */
 static inline
 lm_queue_t lm_queue_create(uint32_t len, uint32_t item_size)
@@ -42,10 +40,12 @@ lm_queue_t lm_queue_create(uint32_t len, uint32_t item_size)
 
 /**
  * @brief 入队
- * @param   queue,队列指针
- *          item,入队项目指针
- *          wait_time,等待时间 单位 ms
- * @return 错误码
+ *
+ * @param[in] queue     队列指针
+ * @param[in] item      入队项目指针
+ * @param[in] wait_time 等待时间 单位 ms
+ *
+ * @return  错误码
  */
 static inline
 int lm_queue_push(lm_queue_t queue, void *item, uint32_t wait_time)
@@ -63,11 +63,13 @@ int lm_queue_push(lm_queue_t queue, void *item, uint32_t wait_time)
 
 /**
  * @brief 出队
- * @param   queue,队列指针
- *          item,出队项目指针
- *          wait_time,等待时间 单位 ms
- *          del_flag,从队列中删除此项目标志  LM_TRUE,删除  LM_FALSE,不删除
- * @return 错误码
+ *
+ * @param[in]   queue       队列指针
+ * @param[out]  item        出队项目指针
+ * @param[in]   wait_time   等待时间 单位 ms
+ * @param[in]   del_flag    从队列中删除此项目标志  LM_TRUE,删除  LM_FALSE,不删除
+ *
+ * @return  错误码
  */
 static inline
 int lm_queue_pop(lm_queue_t queue, void *item, uint32_t wait_time, bool del_flag)
@@ -89,9 +91,7 @@ int lm_queue_pop(lm_queue_t queue, void *item, uint32_t wait_time, bool del_flag
     return pdPASS;
 }
 
-#ifdef __cplusplus
-}
-#endif
+LM_END_EXTERN_C
 
 #endif /* __LM_QUEUE_H */
 

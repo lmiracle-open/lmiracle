@@ -1,25 +1,24 @@
 /********************************* Copyright(c) ********************************
 *
 *                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
 *
 * File Name     : lm_list.h
 * Change Logs   :
-* Date         Author      Notes
-* 2019-11-06   linux       V1.0    first version
+* Date          Author          Notes
+* 2019-11-06    linxuew         V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 系统文件
+* Description   : 链表模块
 *******************************************************************************/
 
-#ifndef __LM_LIST_H__
-#define __LM_LIST_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __LM_LIST_H
+#define __LM_LIST_H
 
 #include <stdbool.h>
+
+LM_BEGIN_EXTERN_C
 
 /**
  * Simple doubly linked list implementation.
@@ -206,11 +205,9 @@ static inline int lm_list_empty(const struct lm_list_head *head)
 	     &pos->member != (head); 										\
 	     pos = n, n = lm_list_entry(n->member.next, typeof(*n), member))
 
-#ifdef __cplusplus
-}
-#endif
+LM_END_EXTERN_C
 
-#endif  /* __LM_LIST_H__ */
+#endif  /* __LM_LIST_H */
 
 /* end of file */
 

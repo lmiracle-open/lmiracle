@@ -1,26 +1,24 @@
 /********************************* Copyright(c) ********************************
 *
 *                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
 *
 * File Name     : lm_ringbuf.h
 * Change Logs   :
-* Date         Author      Notes
-* 2019-06-07   terryall     V1.0    first version
+* Date          Author          Notes
+* 2019-06-07    linxuew         V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 环形缓冲区
+* Description   : 环形缓冲区模块
 *******************************************************************************/
 
 #ifndef __LM_RINGBUF_H
 #define __LM_RINGBUF_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "lmiracle.h"
-#include <string.h>
+
+LM_BEGIN_EXTERN_C
 
 /* ring buffer */
 struct lm_ringbuf
@@ -57,9 +55,10 @@ enum lm_ringbuf_state
 
 /**
  * @brief 初始化环形缓冲区(静态)
- * @param p_rb 环形缓冲区指针
- *        pool 缓冲区地址
- *        size 缓冲区大小
+ *
+ * @param[in] p_rb   环形缓冲区指针
+ * @param[in] pool   环形缓冲区地址
+ * @param[in] size   环形缓冲区大小
  *
  * @return LM_OK  成功
  *         其他    失败
@@ -182,10 +181,7 @@ static inline size_t lm_ringbuf_get_size(struct lm_ringbuf *p_rb)
  */
 #define lm_ringbuf_space_len(p_rb) ((p_rb)->buffer_size - lm_ringbuf_data_len(p_rb))
 
-
-#ifdef __cplusplus
-}
-#endif
+LM_END_EXTERN_C
 
 #endif /* __LM_RINGBUF_H */
 

@@ -1,8 +1,24 @@
+/********************************* Copyright(c) ********************************
+*
+*                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
+*
+* File Name     : lm_bitops.h
+* Change Logs   :
+* Date          Author          Notes
+* 2019-06-07    linxuew         V1.0    first version
+*******************************************************************************/
+
+/*******************************************************************************
+* Description   : 位操作模块
+*******************************************************************************/
+
 #ifndef __LM_BITOPS_H
 #define __LM_BITOPS_H
 
 #include "lm_asm.h"
 
+LM_BEGIN_EXTERN_C
 
 #define BIT(nr)         (1UL << (nr))
 #define BIT_ULL(nr)     (1ULL << (nr))
@@ -10,7 +26,6 @@
 #define BIT_WORD(nr)        ((nr) / BITS_PER_LONG)
 #define BIT_ULL_MASK(nr)    (1ULL << ((nr) % BITS_PER_LONG_LONG))
 #define BIT_ULL_WORD(nr)    ((nr) / BITS_PER_LONG_LONG)
-
 
 /* 32位处理器 */
 #define BITS_PER_LONG    32
@@ -70,6 +85,8 @@ static inline int lm_fls (int x)
 
     return 32 - __clz(x);
 }
+
+LM_END_EXTERN_C
 
 #endif /* __LM_BITOPS_H */
 

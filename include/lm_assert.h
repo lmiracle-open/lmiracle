@@ -1,24 +1,24 @@
 /********************************* Copyright(c) ********************************
 *
 *                          LANMENG Scientific Creation
+*                          https: //www.lmiracle.com
 *
 * File Name     : lm_assert.h
 * Change Logs   :
-* Date         Author      Notes
-* 2020-02-25   terryall    V1.0    first version
+* Date          Author          Notes
+* 2019-06-07    terryall        V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 系统文件
+* Description   : 断言模块
 *******************************************************************************/
 
-#ifndef __LM_ASSERT_H__
-#define __LM_ASSERT_H__
+#ifndef __LM_ASSERT_H
+#define __LM_ASSERT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+LM_BEGIN_EXTERN_C
 
+/* todo: 需要调试的时候 定义该参数 */
 #ifdef LM_DEBUG
 
 /* help macro */
@@ -35,6 +35,13 @@ extern "C" {
 #define lm_assert(e) \
     ((e) ? (void)0 : lm_assert_msg(__FILE__":"_LM_SVAL(__LINE__)":("#e")\n"))
 
+/**
+ * @brief 断言执行函数
+ *
+ * @param[in]     msg   需要输出的消息内容
+ *
+ * @return  None
+ */
 extern void lm_assert_msg (const char *msg);
 
 #else
@@ -49,12 +56,10 @@ extern void lm_assert_msg (const char *msg);
 #define lm_assert(e)    ((void)0)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+LM_END_EXTERN_C
 
 /** @}  lm_if_assert */
 
-#endif /* __LM_ASSERT_H__ */
+#endif /* __LM_ASSERT_H */
 
 /* end of file */

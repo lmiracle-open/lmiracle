@@ -3,37 +3,30 @@
 *                          LANMENG Scientific Creation
 *                          https: //www.lmiracle.com
 *
-* File Name     : lm_sys_start.c
+* File Name     : lm_assert.c
 * Change Logs   :
 * Date          Author          Notes
 * 2019-06-07    terryall        V1.0    first version
 *******************************************************************************/
 
 /*******************************************************************************
-* Description   : 系统启动模块(系统相关初始化)
+* Description   : 断言模块
 *******************************************************************************/
 
-#include "lmiracle.h"
-#include "lm_time.h"
-
-extern int lm_shell_init (void);
+#include "lm_kservice.h"
 
 /**
- * @brief 初始化系统相关的
+ * @brief 断言执行函数
  */
-int lm_system_init (void)
+void lm_assert_msg (const char *msg)
 {
-    int ret = LM_OK;
+    volatile int exit = 0;
 
-    /* 0.todo:预留 */
+    (void)lm_kprintf(msg);
 
-    /* 1. 初始化shell */
-    lm_shell_init();
+    while (0 == exit) {
 
-    /* 2. 时间初始化 */
-    lm_time_init();
-
-    return ret;
+    }
 }
 
 /* end of file */
