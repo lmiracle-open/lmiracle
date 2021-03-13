@@ -20,6 +20,8 @@
 
 LM_BEGIN_EXTERN_C
 
+#define __BYTE_ORDER__  __ORDER_BIG_ENDIAN__        /* todo: 大端格式 */
+
 #if !defined(__BYTE_ORDER__) || !defined(__ORDER_BIG_ENDIAN__)
 #error "The compiler does not support the libpack library."
 #endif
@@ -67,14 +69,11 @@ static inline int pack_le8 (const uint8_t src, uint8_t *dst)
  *
  * @return  返回打包后数据长度
  */
-static inline int pack_be16 (const uint16_t src, uint16_t *dst)
+static inline int pack_be16 (const uint16_t *src, uint16_t *dst, uint16_t size)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = src;
-    #else
-    *dst = BYTE_SWAP16(src);
-    #endif
-
+    for (int i = 0; i < size; i ++) {
+        *dst++ = BYTE_SWAP16(src[i]);
+    }
     return sizeof(uint16_t);
 }
 
@@ -88,12 +87,7 @@ static inline int pack_be16 (const uint16_t src, uint16_t *dst)
  */
 static inline int pack_le16 (const uint16_t src, uint16_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = BYTE_SWAP16(src);
-    #else
     *dst =  src;
-    #endif
-
     return sizeof(uint16_t);
 }
 
@@ -107,12 +101,7 @@ static inline int pack_le16 (const uint16_t src, uint16_t *dst)
  */
 static inline int pack_be32 (const uint32_t src, uint32_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = src;
-    #else
     *dst = BYTE_SWAP32(src);
-    #endif
-
     return sizeof(uint32_t);
 }
 
@@ -126,12 +115,7 @@ static inline int pack_be32 (const uint32_t src, uint32_t *dst)
  */
 static inline int pack_le32 (const uint32_t src, uint32_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst =  BYTE_SWAP32(src);
-    #else
     *dst = src;
-    #endif
-
     return sizeof(uint32_t);
 }
 
@@ -145,12 +129,7 @@ static inline int pack_le32 (const uint32_t src, uint32_t *dst)
  */
 static inline int pack_be64 (const uint64_t src, uint64_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = src;
-    #else
     *dst = BYTE_SWAP64(src);
-    #endif
-
     return sizeof(uint64_t);
 }
 
@@ -164,12 +143,7 @@ static inline int pack_be64 (const uint64_t src, uint64_t *dst)
  */
 static inline int pack_le64 (const uint64_t src, uint64_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = BYTE_SWAP64(src);
-    #else
     *dst = src;
-    #endif
-
     return sizeof(uint64_t);
 }
 
@@ -211,12 +185,7 @@ static inline int unpack_le8 (const uint8_t src, uint8_t *dst)
  */
 static inline int unpack_be16 (const uint16_t src, uint16_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = src;
-    #else
     *dst = BYTE_SWAP16(src);
-    #endif
-
     return sizeof(uint16_t);
 }
 
@@ -230,12 +199,7 @@ static inline int unpack_be16 (const uint16_t src, uint16_t *dst)
  */
 static inline int unpack_le16 (const uint16_t src, uint16_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst =  BYTE_SWAP16(src);
-    #else
     *dst = src;
-    #endif
-
     return sizeof(uint16_t);
 }
 
@@ -249,12 +213,7 @@ static inline int unpack_le16 (const uint16_t src, uint16_t *dst)
  */
 static inline int unpack_be32 (const uint32_t src, uint32_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = src;
-    #else
     *dst = BYTE_SWAP32(src);
-    #endif
-
     return sizeof(uint32_t);
 }
 
@@ -268,12 +227,7 @@ static inline int unpack_be32 (const uint32_t src, uint32_t *dst)
  */
 static inline int unpack_le32 (const uint32_t src, uint32_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = BYTE_SWAP32(src);
-    #else
     *dst = src;
-    #endif
-
     return sizeof(uint32_t);
 }
 
@@ -287,12 +241,7 @@ static inline int unpack_le32 (const uint32_t src, uint32_t *dst)
  */
 static inline int unpack_be64 (const uint64_t src, uint64_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = src;
-    #else
-    *dst = BYTE_SWAP16(src);
-    #endif
-
+    *dst = BYTE_SWAP64(src);
     return sizeof(uint64_t);
 }
 
@@ -306,12 +255,7 @@ static inline int unpack_be64 (const uint64_t src, uint64_t *dst)
  */
 static inline int unpack_le64 (const uint64_t src, uint64_t *dst)
 {
-    #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    *dst = BYTE_SWAP16(src);
-    #else
     *dst = src;
-    #endif
-
     return sizeof(uint64_t);
 }
 

@@ -37,6 +37,35 @@ extern int lm_utils_float_to_str (  char        *str,       \
                                     uint8_t     d_n,        \
                                     bool        flag);
 
+/**
+ * @brief 将float类型转换成uint16保存，该函数转化范围为小数点后面两位
+ *
+ * @param[in]   data    输入的float数据指针
+ * @param[out]  out     输出的byte数据指针
+ * @param[in]   len     转换字节数(*2)
+ *
+ * @return  错误码
+ */
+extern
+inline int lm_float_convert_byte (  float       *data,      \
+                                    uint16_t    *out,       \
+                                    uint16_t    len);
+
+
+/**
+ * @brief 将byte类型转换成float保存，该函数转化范围为小数点后面两位
+ *
+ * @param[in]   data    输入的byte数据指针
+ * @param[out]  out     输出的float数据指针
+ * @param[in]   len     转换字节数(*2)
+ *
+ * @return  错误码
+ */
+extern
+inline int lm_byte_convert_float (  uint16_t        *data,      \
+                                    float           *out,       \
+                                    uint16_t        len);
+
 LM_END_EXTERN_C
 
 #endif /* __LM_UTILS_H */
