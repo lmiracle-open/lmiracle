@@ -68,4 +68,86 @@ int lm_utils_float_to_str ( char        *str,       \
     return LM_OK;
 }
 
+/**
+ * @brief 将float类型转换成uint16保存，该函数转化范围为小数点后面两位
+ */
+inline int lm_float_convert_byte (  float       *data,      \
+                                    uint16_t    *out,       \
+                                    uint16_t    len)
+{
+    int ret = LM_OK;
+    uint16_t      temp = 0;
+    uint16_t    integer, decimal;
+    bool symbol_flag = false;
+
+    /* 1. 参数有效性检查 */
+    if (NULL == data || NULL == out) {
+        return -LM_ERROR;
+    }
+
+    for (int i = 0; i < len; i++) {
+        /* 将小数转换为整数 */
+        temp = (uint16_t)((data[i]*100)/1);
+
+        /* 温度值为负数时 设置符号位 并将负数转换为正数参与计算 */
+        if (temp < 0) {
+            symbol_flag = true;
+            temp = ~temp + 1;
+        }
+
+        /* eg: 27.43->2743->27,43 */
+        integer = (uint16_t)(temp/100);   /* 取出正数部分 */
+        decimal = (uint16_t)(temp%100);   /* 取出小数部分 */
+
+        *out = (integer*100) + (decimal & 0xff);
+
+        if (symbol_flag) {
+            *out |= (1 << 15);
+        }
+
+        out ++;
+    }
+
+    return ret;
+}
+
+/**
+ * @brief 将byte类型转换成float保存，该函数转化范围为小数点后面两位
+ */
+inline int lm_byte_convert_float (  uint16_t        *data,      \
+                                    float           *out,       \
+                                    uint16_t        len)
+{
+    int ret = LM_OK;
+
+    uint16_t     integer, decimal;
+    float temp = 0.0;
+
+    /* 1. 参数有效性检查 */
+    if (NULL == data || NULL == out) {
+        return -LM_ERROR;
+    }
+
+    for (int i = 0; i < len; i ++) {
+
+        /* 2. 解析数据 */
+        integer = (data[i]/100);
+        decimal = (data[i]%100);
+
+        /* 3. 组合数据 */
+        temp = integer + (0.01 * decimal);
+
+        /* 4. 设置符号位 */
+        if (data[i] & 0x8000) {
+            temp *= -1;
+        }
+
+        *out = temp;
+
+        out ++;
+    }
+
+    return ret;
+}
+
 /* end of file */
