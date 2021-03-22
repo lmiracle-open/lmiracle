@@ -150,4 +150,37 @@ inline int lm_byte_convert_float (  uint16_t        *data,      \
     return ret;
 }
 
+/**
+ * @brief 将string类型转换成hex
+ */
+inline int lm_string_convert_hex (char *str, unsigned char *strhex)
+{
+    uint8_t i,cnt=0;
+    char *p = str;             //直针p初始化为指向str
+    uint8_t len = strlen(str); //获取字符串中的字符个数
+
+    if (NULL == str || NULL == strhex) {
+        return -LM_ERROR;
+    }
+
+    while(*p != '\0') {        //结束符判断
+        for (i = 0; i < len; i ++)  //循环判断当前字符是数字还是小写字符还是大写字母
+        {
+            if ((*p >= '0') && (*p <= '9')) //当前字符为数字0~9时
+                strhex[cnt] = *p - '0' + 0x30;//转为十六进制
+
+            if ((*p >= 'A') && (*p <= 'Z')) //当前字符为大写字母A~Z时
+                strhex[cnt] = *p - 'A' + 0x41;//转为十六进制
+
+            if ((*p >= 'a') && (*p <= 'z')) //当前字符为小写字母a~z时
+                strhex[cnt] = *p - 'a' + 0x61;  //转为十六进制
+
+            p ++;    //指向下一个字符
+            cnt ++;
+        }
+    }
+
+    return LM_OK;
+}
+
 /* end of file */

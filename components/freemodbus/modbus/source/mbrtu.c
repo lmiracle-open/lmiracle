@@ -281,10 +281,14 @@ xMBRTUReceiveFSM( void )
     return xTaskNeedSwitch;
 }
 
+uint8_t send_buf[1024] = {0};
+
 BOOL
 xMBRTUTransmitFSM( void )
 {
     BOOL            xNeedPoll = FALSE;
+    static int cnt = 0;
+    static bool flag = false;
 
 //    assert( eRcvState == STATE_RX_IDLE );
 
@@ -301,12 +305,29 @@ xMBRTUTransmitFSM( void )
         /* check if we are finished. */
         if( usSndBufferCount != 0 )
         {
+            if (!flag) {
+                flag = true;
+                cnt = usSndBufferCount;
+                memcpy(send_buf, pucSndBufferCur, cnt);
+            }
             xMBPortSerialPutByte( ( CHAR )*pucSndBufferCur );
+            /* TODO: terryall add */
+//            lm_kprintf("send data: %x \r\n", *pucSndBufferCur);
             pucSndBufferCur++;  /* next byte in sendbuffer. */
             usSndBufferCount--;
         }
         else
         {
+            /* TODO: terryall add */
+            lm_kprintf("send data len: %d\r\n", cnt);
+            for (int i = 0; i < cnt; i ++) {
+                lm_kprintf("%x ", send_buf[i]);
+            }
+            lm_kprintf("\r\n");
+            cnt = 0;
+            memset(send_buf, 0, sizeof(send_buf));
+            flag = false;
+
             xNeedPoll = xMBPortEventPost( EV_FRAME_SENT );
             /* Disable transmitter. This prevents another transmit buffer
              * empty interrupt. */

@@ -66,6 +66,12 @@ inline int lm_byte_convert_float (  uint16_t        *data,      \
                                     float           *out,       \
                                     uint16_t        len);
 
+/**
+ * @brief 将string类型转换成hex
+ */
+extern
+inline int lm_string_convert_hex (char *str, unsigned char *strhex);
+
 LM_END_EXTERN_C
 
 #endif /* __LM_UTILS_H */

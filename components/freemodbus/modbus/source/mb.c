@@ -367,6 +367,12 @@ eMBErrorCode eMBPoll( void )
                 /* Check if the frame is for us. If not ignore the frame. */
                 if( ( ucRcvAddress == ucMBAddress ) || ( ucRcvAddress == MB_ADDRESS_BROADCAST ) )
                 {
+                    /* TODO: terryall add */
+                    lm_kprintf("recv data: \r\n");
+                    for (int i = 0; i < usLength; i ++) {
+                        lm_kprintf("%x ", ucMBFrame[i]);
+                    }
+                    lm_kprintf("\r\n");
                     ( void )xMBPortEventPost( EV_EXECUTE );
                 }
             }
