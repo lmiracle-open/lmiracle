@@ -30,6 +30,10 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#ifndef LM_MB_DEBUG
+//#define LM_MB_DEBUG
+#endif
+
 #ifndef assert
 #define assert(e)  lm_assert(e)
 #endif

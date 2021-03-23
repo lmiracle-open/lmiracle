@@ -183,9 +183,11 @@ static inline int unpack_le8 (const uint8_t src, uint8_t *dst)
  *
  * @return  返回解包后数据长度
  */
-static inline int unpack_be16 (const uint16_t src, uint16_t *dst)
+static inline int unpack_be16 (const uint16_t *src, uint16_t *dst, uint16_t size)
 {
-    *dst = BYTE_SWAP16(src);
+    for (int i = 0; i < size; i ++) {
+        *dst++ = BYTE_SWAP16(src[i]);
+    }
     return sizeof(uint16_t);
 }
 
