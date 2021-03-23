@@ -305,19 +305,20 @@ xMBRTUTransmitFSM( void )
         /* check if we are finished. */
         if( usSndBufferCount != 0 )
         {
+            #ifdef LM_MB_DEBUG
             if (!flag) {
                 flag = true;
                 cnt = usSndBufferCount;
                 memcpy(send_buf, pucSndBufferCur, cnt);
             }
+            #endif
             xMBPortSerialPutByte( ( CHAR )*pucSndBufferCur );
-            /* TODO: terryall add */
-//            lm_kprintf("send data: %x \r\n", *pucSndBufferCur);
             pucSndBufferCur++;  /* next byte in sendbuffer. */
             usSndBufferCount--;
         }
         else
         {
+            #ifdef LM_MB_DEBUG
             /* TODO: terryall add */
             lm_kprintf("send data len: %d\r\n", cnt);
             for (int i = 0; i < cnt; i ++) {
@@ -327,6 +328,7 @@ xMBRTUTransmitFSM( void )
             cnt = 0;
             memset(send_buf, 0, sizeof(send_buf));
             flag = false;
+            #endif
 
             xNeedPoll = xMBPortEventPost( EV_FRAME_SENT );
             /* Disable transmitter. This prevents another transmit buffer
