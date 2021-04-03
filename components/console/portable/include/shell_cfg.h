@@ -106,7 +106,7 @@
 /**
  * @brief shell默认用户
  */
-#define     SHELL_DEFAULT_USER          "lmiracle"
+#define     SHELL_DEFAULT_USER          "root@lmiracle"
 
 /**
  * @brief shell默认用户密码

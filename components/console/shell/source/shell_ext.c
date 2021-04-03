@@ -278,7 +278,7 @@ unsigned int shellExtParsePara(Shell *shell, char *string)
     {
         return (unsigned int)shellExtParseNumber(string);
     }
-    else if (*string == '$' && *(string + 1))
+    else if (*string == '#' && *(string + 1))
     {
         return shellExtParseVar(shell, string);
     }
