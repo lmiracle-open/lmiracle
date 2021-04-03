@@ -20,7 +20,9 @@
 
 LM_BEGIN_EXTERN_C
 
+#ifndef __BYTE_ORDER__
 #define __BYTE_ORDER__  __ORDER_BIG_ENDIAN__        /* todo: 大端格式 */
+#endif
 
 #if !defined(__BYTE_ORDER__) || !defined(__ORDER_BIG_ENDIAN__)
 #error "The compiler does not support the libpack library."

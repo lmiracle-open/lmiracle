@@ -287,8 +287,8 @@ BOOL
 xMBRTUTransmitFSM( void )
 {
     BOOL            xNeedPoll = FALSE;
-    static int cnt = 0;
-    static bool flag = false;
+//    static int cnt = 0;
+//    static bool flag = false;
 
 //    assert( eRcvState == STATE_RX_IDLE );
 

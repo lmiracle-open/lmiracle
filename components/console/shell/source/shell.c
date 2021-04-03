@@ -310,7 +310,7 @@ static void shellWriteCommandLine(Shell *shell)
     {
         shellWriteString(shell, "\r\n");
         shellWriteString(shell, shell->info.user->data.user.name);
-        shellWriteString(shell, ":/$ ");
+        shellWriteString(shell, ":~# ");
     }
     else
     {
