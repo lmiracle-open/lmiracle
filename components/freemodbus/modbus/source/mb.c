@@ -361,15 +361,16 @@ eMBErrorCode eMBPoll( void )
             break;
 
         case EV_FRAME_RECEIVED:
+
             eStatus = peMBFrameReceiveCur( &ucRcvAddress, &ucMBFrame, &usLength );
             if( eStatus == MB_ENOERR )
             {
                 /* Check if the frame is for us. If not ignore the frame. */
                 if( ( ucRcvAddress == ucMBAddress ) || ( ucRcvAddress == MB_ADDRESS_BROADCAST ) )
                 {
-                    #ifdef LM_MB_DEBUG
-                    /* TODO: terryall add */
-                    lm_kprintf("recv data: \r\n");
+                    #if LM_MB_DEBUG
+                    /* TODO: terryall add debug info */
+                    lm_kprintf("modbus recv data len: %d\r\n", usLength);
                     for (int i = 0; i < usLength; i ++) {
                         lm_kprintf("%x ", ucMBFrame[i]);
                     }
@@ -381,6 +382,7 @@ eMBErrorCode eMBPoll( void )
             break;
 
         case EV_EXECUTE:
+
             ucFunctionCode = ucMBFrame[MB_PDU_FUNC_OFF];
             eException = MB_EX_ILLEGAL_FUNCTION;
             for( i = 0; i < MB_FUNC_HANDLERS_MAX; i++ )
@@ -413,6 +415,7 @@ eMBErrorCode eMBPoll( void )
             break;
 
         case EV_FRAME_SENT:
+
             break;
         }
     }

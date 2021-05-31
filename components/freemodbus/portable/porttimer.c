@@ -67,9 +67,11 @@ BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
  */
 void vMBPortTimersEnable()
 {
-    if (__gp_mb_timer->timer_sleep) {
-        __gp_mb_timer->timer_sleep(__gp_mb_timer->timer_id, true);
-    }
+	if(__gp_mb_timer->timer_switch) {
+		if (__gp_mb_timer->timer_sleep) {
+				__gp_mb_timer->timer_sleep(__gp_mb_timer->timer_id, true);
+			}
+	}
 }
 
 /**
@@ -77,9 +79,11 @@ void vMBPortTimersEnable()
  */
 void vMBPortTimersDisable()
 {
-    if (__gp_mb_timer->timer_sleep) {
-        __gp_mb_timer->timer_sleep(__gp_mb_timer->timer_id, false);
-    }
+	if(__gp_mb_timer->timer_switch) {
+	   if (__gp_mb_timer->timer_sleep) {
+			__gp_mb_timer->timer_sleep(__gp_mb_timer->timer_id, false);
+		}
+	}
 }
 
 /**

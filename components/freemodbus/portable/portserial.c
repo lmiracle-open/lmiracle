@@ -26,7 +26,7 @@
 #include "mbport.h"
 
 #include "lm_serial.h"          /* 串口框架层接口 */
-
+#include "lm_drv_s32k_lpuart.h"
 #include "lm_mb_interface.h"
 
 /* ----------------------- Defines ------------------------------------------*/
@@ -45,9 +45,7 @@ static lm_devent_t __gp_mb_serial_event = NULL;
 
 static void prvvUARTTxReadyISR(void);
 static void prvvUARTRxISR(void);
-
 /* ----------------------- Start implementation -----------------------------*/
-
 /**
  * @brief 使能modbus串口
  */
@@ -75,9 +73,8 @@ void vMBPortClose(void)
     /* empty */
     return ;
 }
-
 /**
- * @brief modbus串口发送数据
+ * @brief modbus串口发送数据 1byte
  */
 BOOL xMBPortSerialPutByte(CHAR ucByte)
 {
@@ -86,12 +83,30 @@ BOOL xMBPortSerialPutByte(CHAR ucByte)
 }
 
 /**
- * @brief modbus串口接收数据
+ * @brief modbus串口接收数据 1byte
  */
-BOOL xMBPortSerialGetByte(CHAR * pucByte)
+BOOL xMBPortSerialGetByte(CHAR * pucByte )
 {
     /* 1. 接收数据 */
     return lm_serial_read(__gp_mb_serial->com, (uint8_t *)pucByte, 1);
+}
+
+/**
+ * @brief modbus串口接收数据 nbyte
+ */
+uint32_t xMBPortSerialGetBuff(CHAR * ucBuff,uint32_t len)
+{
+    /* 1. 接收数据 */
+    return lm_serial_read(__gp_mb_serial->com, ucBuff, len);
+}
+
+/**
+ * @brief modbus串口发送数据 nbyte
+ */
+BOOL xMBPortSerialPutBuff (CHAR * ucBuff, uint32_t len)
+{
+    /* 1. 发送数据 */
+    return lm_serial_write(__gp_mb_serial->com, ucBuff, len);
 }
 
 /* 
@@ -146,6 +161,14 @@ static void __mb_serial_read_task (void* parameter)
 }
 
 /**
+ * @brief modbus获取串口传输类型
+ */
+void *get_serial_transmit_type (void)
+{
+    return (void *)__gp_mb_serial->transmit_type;
+}
+
+/**
  * @brief modbus串口初始化
  */
 BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
@@ -159,13 +182,17 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
     lm_serial_get_info(ucPORT, &serial_info);
 
     /* 2.设置modbus串口参数 */
-    serial_info.config.baud_rate = ulBaudRate;
-    serial_info.config.data_bits = ucDataBits;
-    serial_info.config.parity = eParity;
-    serial_info.config.fast_rect = 1;
-    serial_info.idle_timeout = 0xFFFFFFFF;
-    serial_info.read_timeout = 0xFFFFFFFF;                  /* 读阻塞 */
-    lm_serial_set_info(ucPORT, (const struct lm_serial_info *)&serial_info);
+    if(__gp_mb_serial->transmit_type) {
+        serial_info.config.transmit_type = __gp_mb_serial->transmit_type ;
+    }
+        serial_info.config.baud_rate = ulBaudRate;
+        serial_info.config.data_bits = ucDataBits;
+        serial_info.config.parity = eParity;
+        serial_info.config.fast_rect = 1;
+        serial_info.idle_timeout = 0xFFFFFFFF;
+        serial_info.read_timeout = 0xFFFFFFFF;                  /* 读阻塞 */
+        lm_serial_set_info(ucPORT, (const struct lm_serial_info *)&serial_info);
+
 
     /* 3.创建modbus串口传输事件 */
     __gp_mb_serial_event = lm_event_create();

@@ -24,6 +24,7 @@
 #include "lm_types.h"
 
 LM_BEGIN_EXTERN_C
+/* modbus接收缓存 */
 
 /*************************** modbus从机移植接口数据结构定义  *************************/
 
@@ -33,6 +34,8 @@ LM_BEGIN_EXTERN_C
 typedef struct lm_mb_timer {
     /* 定时器ID */
     uint32_t timer_id;
+    /* 定时器开关 */
+    uint32_t timer_switch;
 
     /**
      * @brief 定时器到期时间设置回调
@@ -55,11 +58,12 @@ typedef struct lm_mb_timer {
  * @brief modbus串口注册结构体
  */
 typedef struct lm_mb_serial {
-    uint32_t com;                                       /* 串口号 */
-    uint32_t stask_stack_size;                          /* 串口发送任务栈深度 */
-    uint32_t stask_prio;                                /* 串口发送任务优先级 */
-    uint32_t rtask_stack_size;                          /* 串口接收任务栈深度 */
-    uint32_t rtask_prio;                                /* 串口接收任务优先级 */
+    uint32_t  com;                                          /* 串口号 */
+    bool      transmit_type;                                /* 串口传输方式 */
+    uint32_t  stask_stack_size;                             /* 串口发送任务栈深度 */
+    uint32_t  stask_prio;                                   /* 串口发送任务优先级 */
+    uint32_t  rtask_stack_size;                             /* 串口接收任务栈深度 */
+    uint32_t  rtask_prio;                                   /* 串口接收任务优先级 */
 } lm_mb_serial_t;
 
 /***************************** modbus从机对外提供接口  *****************************/

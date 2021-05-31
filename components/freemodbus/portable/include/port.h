@@ -30,9 +30,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#ifndef LM_MB_DEBUG
-//#define LM_MB_DEBUG
-#endif
+/* 调试宏开关 */
+#define LM_MB_DEBUG         (0)
 
 #ifndef assert
 #define assert(e)  lm_assert(e)
@@ -63,5 +62,14 @@ typedef int32_t LONG;
 #ifndef FALSE
 #define FALSE           0
 #endif
+
+/**
+ * @brief modbus获取串口传输类型
+ *
+ * @param[in]   None
+ *
+ * @return  (void *)
+ */
+extern void *get_serial_transmit_type (void);
 
 #endif
