@@ -47,9 +47,9 @@ extern int lm_utils_float_to_str (  char        *str,       \
  * @return  错误码
  */
 extern
-inline int lm_float_convert_byte (  float       *data,      \
-                                    uint16_t    *out,       \
-                                    uint16_t    len);
+int lm_float_convert_byte ( float       *data,      \
+                            uint16_t    *out,       \
+                            uint16_t    len);
 
 
 /**
@@ -62,15 +62,15 @@ inline int lm_float_convert_byte (  float       *data,      \
  * @return  错误码
  */
 extern
-inline int lm_byte_convert_float (  uint16_t        *data,      \
-                                    float           *out,       \
-                                    uint16_t        len);
+int lm_byte_convert_float ( uint16_t        *data,      \
+                            float           *out,       \
+                            uint16_t        len);
 
 /**
  * @brief 将string类型转换成hex
  */
 extern
-inline int lm_string_convert_hex (char *str, unsigned char *strhex);
+int lm_string_convert_hex (char *str, unsigned char *strhex);
 
 LM_END_EXTERN_C
 

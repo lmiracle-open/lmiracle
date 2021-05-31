@@ -182,17 +182,15 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
     lm_serial_get_info(ucPORT, &serial_info);
 
     /* 2.设置modbus串口参数 */
-    if(__gp_mb_serial->transmit_type) {
-        serial_info.config.transmit_type = __gp_mb_serial->transmit_type ;
-    }
-        serial_info.config.baud_rate = ulBaudRate;
-        serial_info.config.data_bits = ucDataBits;
-        serial_info.config.parity = eParity;
-        serial_info.config.fast_rect = 1;
-        serial_info.idle_timeout = 0xFFFFFFFF;
-        serial_info.read_timeout = 0xFFFFFFFF;                  /* 读阻塞 */
-        lm_serial_set_info(ucPORT, (const struct lm_serial_info *)&serial_info);
 
+    serial_info.config.transmit_type = __gp_mb_serial->transmit_type ;
+    serial_info.config.baud_rate = ulBaudRate;
+    serial_info.config.data_bits = ucDataBits;
+    serial_info.config.parity = eParity;
+    serial_info.config.fast_rect = 1;
+    serial_info.idle_timeout = 0xFFFFFFFF;
+    serial_info.read_timeout = 0xFFFFFFFF;                  /* 读阻塞 */
+    lm_serial_set_info(ucPORT, (const struct lm_serial_info *)&serial_info);
 
     /* 3.创建modbus串口传输事件 */
     __gp_mb_serial_event = lm_event_create();
