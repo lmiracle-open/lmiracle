@@ -244,7 +244,7 @@ xMBRTUReceiveFSM( void )
 
     /* Always read the character. */
     if (__g_serial_transmit_type) {
-        len = xMBPortSerialGetBuff( ucRTUBuf, MB_SER_PDU_SIZE_MAX );
+        len = xMBPortSerialGetBuff( (CHAR *)ucRTUBuf, MB_SER_PDU_SIZE_MAX );
     } else {
         ( void )xMBPortSerialGetByte( ( CHAR * ) & ucByte );
     }
@@ -334,7 +334,7 @@ xMBRTUTransmitFSM( void )
                 length = usSndBufferCount;
             }
             if (__g_serial_transmit_type) {
-                xMBPortSerialPutBuff( pucSndBufferCur, usSndBufferCount );
+                xMBPortSerialPutBuff( (CHAR *)pucSndBufferCur, usSndBufferCount );
                 usSndBufferCount = 0;
             } else {
                 xMBPortSerialPutByte( ( CHAR )*pucSndBufferCur );
