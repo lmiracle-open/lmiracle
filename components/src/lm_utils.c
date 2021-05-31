@@ -71,7 +71,7 @@ int lm_utils_float_to_str ( char        *str,       \
 /**
  * @brief 将float类型转换成uint16保存，该函数转化范围为小数点后面两位
  */
-inline int lm_float_convert_byte (  float       *data,      \
+int lm_float_convert_byte (  float       *data,      \
                                     uint16_t    *out,       \
                                     uint16_t    len)
 {
@@ -114,7 +114,7 @@ inline int lm_float_convert_byte (  float       *data,      \
 /**
  * @brief 将byte类型转换成float保存，该函数转化范围为小数点后面两位
  */
-inline int lm_byte_convert_float (  uint16_t        *data,      \
+int lm_byte_convert_float (  uint16_t        *data,      \
                                     float           *out,       \
                                     uint16_t        len)
 {
@@ -153,7 +153,7 @@ inline int lm_byte_convert_float (  uint16_t        *data,      \
 /**
  * @brief 将string类型转换成hex
  */
-inline int lm_string_convert_hex (char *str, unsigned char *strhex)
+int lm_string_convert_hex (char *str, unsigned char *strhex)
 {
     uint8_t i,cnt=0;
     char *p = str;             //直针p初始化为指向str

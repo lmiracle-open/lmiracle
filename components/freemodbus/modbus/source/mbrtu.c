@@ -137,9 +137,9 @@ eMBRTUStart( void )
      * modbus protocol stack until the bus is free.
      */
     if (__g_serial_transmit_type) {
-    	eRcvState = STATE_RX_IDLE;
+        eRcvState = STATE_RX_IDLE;
     } else {
-    	eRcvState = STATE_RX_INIT;
+        eRcvState = STATE_RX_INIT;
     }
 
     vMBPortSerialEnable( TRUE, FALSE );
