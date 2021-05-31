@@ -115,6 +115,13 @@ void            vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable );
 INLINE BOOL     xMBPortSerialGetByte( CHAR * pucByte );
 
 INLINE BOOL     xMBPortSerialPutByte( CHAR ucByte );
+/*----------------------------------------------------------------------------*/
+INLINE uint32_t xMBPortSerialGetBuff( CHAR * ucBuff, uint32_t len );
+
+INLINE BOOL     xMBPortSerialPutBuff( CHAR * ucBuff, uint32_t len );
+
+uint8_t*		xMBBufferPointer();
+void 			get_read_semb();
 
 BOOL            xMBMasterPortSerialInit( UCHAR ucPort, ULONG ulBaudRate,
                                    UCHAR ucDataBits, eMBParity eParity );

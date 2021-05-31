@@ -80,6 +80,7 @@ struct lm_serial_port;
     LM_SERIAL_BIT_LSB,                          \
     0,                                          \
     0,                                          \
+	0,											\
 }
 
 /**
@@ -93,7 +94,8 @@ struct lm_serial_config {
     uint32_t       parity                   :2;     /* 校验位 */
     uint32_t       bit_order                :1;     /* LSB或MSB */
     uint32_t       fast_rect                :1;     /* 快速相应 */
-    uint32_t       reserved                 :22;
+    uint32_t	   transmit_type		    :1;		/* 传输方式 */
+    uint32_t       reserved                 :21;
 };
 
 #define LM_SERIAL_INFO_DEFAULT     \
@@ -111,7 +113,6 @@ struct lm_serial_info
     uint32_t       idle_timeout;                /* 空闲超时 */
 };
 
-
 /**
  * @brief 串口服务函数
  */
@@ -122,6 +123,10 @@ typedef struct lm_serial_ops_t {
      */
     int (*pfunc_set_config) (struct lm_serial_port         *p_serial,
                              const struct lm_serial_config *p_config);
+	/**
+	 * @brief 配置(使用DMA)
+	 */
+    int (*pfunc_set_config_dma) (struct lm_serial_port *p_serial);
 
     /**
      * @brief 发送数据
@@ -129,7 +134,12 @@ typedef struct lm_serial_ops_t {
     int (*pfunc_send) (struct lm_serial_port *p_serial,
                        const void            *p_buf,
                        size_t                 size);
-
+    /**
+     * @brief 发送数据(DMA)
+     */
+    int (*pfunc_send_dma) ( struct lm_serial_port *p_serial,
+                            const void            *p_buf,
+                            size_t                 size);
     /**
      * @brief 发送一个字符
      */
@@ -139,6 +149,7 @@ typedef struct lm_serial_ops_t {
      * @brief 获取一个字符
      */
     int (*pfunc_poll_get_char) (struct lm_serial_port *p_serial);
+
 } lm_serial_ops_t;
 
 
@@ -148,17 +159,18 @@ typedef struct lm_serial_ops_t {
 struct lm_serial_port {
     struct lm_list_head         list;
 
-    uint8_t                    *recv_buf;         /* 接收缓存区的地址 */
-    uint32_t                    buf_size;         /* 接收缓存区大小 */
-    int                         id;               /* 对应的串口ID */
+    uint8_t                    *recv_buf;           /* 接收缓存区的地址 */
+    uint32_t                    buf_size;           /* 接收缓存区大小 */
+    uint32_t                    *recv_size;         /* dma接收到的数据大小 */
+    int                         id;                 /* 对应的串口ID */
 
     struct lm_ringbuf           rbuf;
 
     struct lm_serial_info       serial_info;
-    lm_mutex_t              ro_mutex;
-    lm_mutex_t              wr_mutex;
-    lm_semb_t               ro_sync_semb;
-    const lm_serial_ops_t         *p_ops;       /* 串口操作函数,由底层驱动去实现 */
+    lm_mutex_t                  ro_mutex;
+    lm_mutex_t                  wr_mutex;
+    lm_semb_t                   ro_sync_semb;
+    const lm_serial_ops_t       *p_ops;             /* 串口操作函数,由底层驱动去实现 */
 };
 
 static inline void
@@ -182,6 +194,14 @@ extern int lm_serial_set_info (int com, const struct lm_serial_info *p_info);
  * @param[in] p_info 存放串口配置数据的地址
  */
 extern int lm_serial_get_info (int com, struct lm_serial_info *p_info);
+
+/**
+ * @brief 获取串口端口配置信息
+ *
+ * @param[in] com    串口号
+ * @param[in] p_info 存放串口端口配置数据的地址
+ */
+extern int lm_serial_get_serial_port (int com, struct lm_serial_port *p_serial);
 
 /**
  * @brief 串口设备写数据

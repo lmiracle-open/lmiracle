@@ -1,7 +1,6 @@
 #include "lmiracle.h"
 #include "lm_serial.h"
 
-
 /* 链表头 */
 static LIST_HEAD(__g_spi_list);
 
@@ -43,7 +42,6 @@ int lm_serial_get_info (int com, struct lm_serial_info *p_info)
     return ret;
 }
 
-
 /*
  * @brief 配置串口
  */
@@ -69,20 +67,27 @@ int lm_serial_set_info (int com, const struct lm_serial_info *p_info)
     lm_mutex_lock(&p_serial->wr_mutex, LM_SEM_WAIT_FOREVER);
     lm_mutex_lock(&p_serial->ro_mutex, LM_SEM_WAIT_FOREVER);
 
-    if (p_serial->p_ops->pfunc_set_config) {
-        ret = p_serial->p_ops->pfunc_set_config(p_serial, &p_info->config);
-        if (!ret) {
-            memcpy(&p_serial->serial_info, p_info, sizeof(*p_info));
+    if (p_info->config.transmit_type) {
+//        if (p_serial->p_ops->pfunc_set_config_dma) {
+//            ret = p_serial->p_ops->pfunc_set_config_dma(p_serial);
+//            if (!ret) {
+                memcpy(&p_serial->serial_info, p_info, sizeof(*p_info));
+//            }
+//        }
+    } else {
+        if (p_serial->p_ops->pfunc_set_config) {
+            ret = p_serial->p_ops->pfunc_set_config(p_serial, &p_info->config);
+            if (!ret) {
+                memcpy(&p_serial->serial_info, p_info, sizeof(*p_info));
+            }
         }
     }
-
 
     lm_mutex_unlock(&p_serial->ro_mutex);
     lm_mutex_unlock(&p_serial->wr_mutex);
 
     return ret;
 }
-
 
 /*
  * 串口读
@@ -118,65 +123,75 @@ int lm_serial_read (int com, void *p_buf, size_t size)
 
     p_buffer = (uint8_t *)p_buf;
     lm_mutex_lock(&p_serial->ro_mutex, LM_SEM_WAIT_FOREVER);
+    if(!p_serial->serial_info.config.transmit_type) {
 
-    total_time = p_serial->serial_info.read_timeout;
-    timeout    = total_time;
+        total_time = p_serial->serial_info.read_timeout;
+        timeout    = total_time;
 
-    if (total_time > p_serial->serial_info.idle_timeout) {
-        least_timeout = p_serial->serial_info.idle_timeout;
-    } else {
-        least_timeout = total_time;
-    }
-
-    /* 获取互斥量后才开始记录 超时时间 */
-    start_tick = lm_sys_get_tick();
-
-    while (size) {
-
-        if (lm_semb_take(&p_serial->ro_sync_semb, timeout) != LM_OK) {
-
-            /* 接收超时 */
-            lm_mutex_unlock(&p_serial->ro_mutex);
-            return idx;
+        if (total_time > p_serial->serial_info.idle_timeout) {
+            least_timeout = p_serial->serial_info.idle_timeout;
+        } else {
+            least_timeout = total_time;
         }
 
-        len      =  lm_ringbuf_get(&p_serial->rbuf, &p_buffer[idx], size);
-        idx      += len;
-        size     -= len;
+        /* 获取互斥量后才开始记录 超时时间 */
+        start_tick = lm_sys_get_tick();
 
-        /*
-         * 如果没有读完,下次进来可以直接读取
-         */
-        if (lm_ringbuf_data_len(&p_serial->rbuf)){
-            lm_semb_give(&p_serial->ro_sync_semb);
-        }
+        while (size) {
 
-        if (total_time != (uint32_t)-1) {
-
-            uint32_t tmp_use_time = \
-                    lm_tick_to_ms(lm_sys_get_tick() - start_tick);
-
-            if (tmp_use_time > total_time) {
-                /* 总超时已到 */
+            if (lm_semb_take(&p_serial->ro_sync_semb, timeout) != LM_OK) {
+                /* 接收超时 */
                 lm_mutex_unlock(&p_serial->ro_mutex);
                 return idx;
-            } else {
-                /* 剩下的全局超时时间  */
-                remain_total_timeout = total_time - tmp_use_time;
             }
 
+            len      =  lm_ringbuf_get(&p_serial->rbuf, &p_buffer[idx], size);
+            idx      += len;
+            size     -= len;
+
             /*
-             * 如果剩下的超时时间小于最小的一个超时,
-             * 则使用最小的,否则使用最小超时
+             * 如果没有读完,下次进来可以直接读取
              */
-            if (remain_total_timeout > least_timeout) {
-                timeout = least_timeout;
-            } else {
-                timeout = remain_total_timeout;
+            if (lm_ringbuf_data_len(&p_serial->rbuf)){
+                lm_semb_give(&p_serial->ro_sync_semb);
             }
+
+            if (total_time != (uint32_t)-1) {
+
+                uint32_t tmp_use_time = \
+                        lm_tick_to_ms(lm_sys_get_tick() - start_tick);
+
+                if (tmp_use_time > total_time) {
+                    /* 总超时已到 */
+                    lm_mutex_unlock(&p_serial->ro_mutex);
+                    return idx;
+                } else {
+                    /* 剩下的全局超时时间  */
+                    remain_total_timeout = total_time - tmp_use_time;
+                }
+
+                /*
+                 * 如果剩下的超时时间小于最小的一个超时,
+                 * 则使用最小的,否则使用最小超时
+                 */
+                if (remain_total_timeout > least_timeout) {
+                    timeout = least_timeout;
+                } else {
+                    timeout = remain_total_timeout;
+                }
+            } else {
+                /* 设置下一次的超时为码间超时 */
+                timeout = least_timeout;
+            }
+        }
+    } else {
+        lm_semb_take(&p_serial->ro_sync_semb, LM_SEM_WAIT_FOREVER);
+        if (*p_serial->recv_size > size) {
+            memcpy(p_buf, p_serial->recv_buf, size);
+            idx = size;
         } else {
-            /* 设置下一次的超时为码间超时 */
-            timeout = least_timeout;
+            memcpy(p_buf, p_serial->recv_buf, *p_serial->recv_size);
+            idx = *p_serial->recv_size;
         }
     }
 
@@ -184,7 +199,6 @@ int lm_serial_read (int com, void *p_buf, size_t size)
 
     return idx;
 }
-
 
 /*
  * 串口发送
@@ -210,15 +224,20 @@ int lm_serial_write (int com, const void *p_buf, size_t size)
 
     lm_mutex_lock(&p_serial->wr_mutex, LM_SEM_WAIT_FOREVER);
 
-    if (p_serial->p_ops->pfunc_send) {
-        wlen = p_serial->p_ops->pfunc_send(p_serial, p_buf, size);
+    if (p_serial->serial_info.config.transmit_type) {
+        if (p_serial->p_ops->pfunc_send_dma) {
+            wlen = p_serial->p_ops->pfunc_send_dma(p_serial, p_buf, size);
+        }
+    } else {
+        if (p_serial->p_ops->pfunc_send) {
+            wlen = p_serial->p_ops->pfunc_send(p_serial, p_buf, size);
+        }
     }
 
     lm_mutex_unlock(&p_serial->wr_mutex);
 
     return wlen;
 }
-
 
 /*
  * 注册串口驱动
@@ -259,6 +278,5 @@ int lm_serial_register (struct lm_serial_port *p_serial)
 
     return ret;
 }
-
 
 /* end of file */
