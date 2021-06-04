@@ -312,7 +312,8 @@ xMBRTUReceiveFSM( void )
 BOOL
 xMBRTUTransmitFSM( void )
 {
-    BOOL            xNeedPoll = FALSE;
+    BOOL            xNeedPoll   = FALSE;
+    static uint32_t length      = 0;
 
 //    assert( eRcvState == STATE_RX_IDLE );
     /* Always read the character. */
@@ -329,7 +330,6 @@ xMBRTUTransmitFSM( void )
         /* check if we are finished. */
         if( usSndBufferCount != 0 )
         {
-            static uint32_t length = 0;
             if (length == 0) {
                 length = usSndBufferCount;
             }

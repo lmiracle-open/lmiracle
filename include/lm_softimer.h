@@ -68,7 +68,7 @@ lm_timer_t lm_softimer_create(softimer_handle_t handle, uint8_t reload, uint16_t
 static inline
 int lm_softimer_start(lm_timer_t timer, bool isr)
 {
-    if (LM_TRUE != isr) {
+    if (LM_FALSE != isr) {
         if (pdPASS != xTimerStartFromISR(timer, pdFALSE)) {
             return LM_ERROR;
         }
@@ -92,7 +92,7 @@ int lm_softimer_start(lm_timer_t timer, bool isr)
 static inline
 int lm_softimer_stop(lm_timer_t timer, uint8_t isr)
 {
-    if (LM_TRUE != isr) {
+    if (LM_FALSE != isr) {
         if (pdTRUE != xTimerStopFromISR(timer, pdFALSE)) {
             return LM_ERROR;
         }
@@ -116,7 +116,7 @@ int lm_softimer_stop(lm_timer_t timer, uint8_t isr)
 static inline
 int lm_softimer_reset(lm_timer_t timer, uint8_t isr)
 {
-    if (LM_TRUE != isr) {
+    if (LM_FALSE != isr) {
         if (pdTRUE != xTimerResetFromISR(timer, pdFALSE)) {
             return LM_ERROR;
         }

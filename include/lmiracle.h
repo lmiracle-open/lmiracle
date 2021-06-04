@@ -21,6 +21,7 @@
 #include "osif.h"
 #include "semphr.h"
 #include "event_groups.h"
+#include "queue.h"
 
 #include "lm_error.h"
 #include "lm_assert.h"
@@ -123,6 +124,11 @@ typedef  mutex_t lm_mutex_t;
  * @brief 信号量类型
  */
 typedef semaphore_t lm_sem_t;
+
+/**
+ * @brief 队列类型
+ */
+typedef QueueHandle_t lm_queue_t;
 
 /**
  * @brief 创建计数型信号量
