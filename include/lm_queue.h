@@ -16,7 +16,6 @@
 #ifndef __LM_QUEUE_H
 #define __LM_QUEUE_H
 
-#include "queue.h"
 #include "lmiracle.h"
 
 LM_BEGIN_EXTERN_C
@@ -48,14 +47,21 @@ lm_queue_t lm_queue_create(uint32_t len, uint32_t item_size)
  * @return  错误码
  */
 static inline
-int lm_queue_push(lm_queue_t queue, void *item, uint32_t wait_time)
+int lm_queue_push(lm_queue_t queue, void *item, uint32_t wait_time, bool isr)
 {
     if (NULL == queue || NULL == item) {
         return LM_ENULL;
     }
 
-    if (pdPASS != xQueueSend(queue, item, wait_time)) {
-        return LM_EQUEUE_FULL;
+    if (LM_FALSE != isr) {
+        /* todo: 此处有问题??? */
+//        if (pdPASS != xQueueSendFromISR(queue, item, wait_time)) {
+//            return LM_EQUEUE_FULL;
+//        }
+    } else {
+        if (pdPASS != xQueueSend(queue, item, wait_time)) {
+            return LM_EQUEUE_FULL;
+        }
     }
 
     return pdPASS;
@@ -72,19 +78,32 @@ int lm_queue_push(lm_queue_t queue, void *item, uint32_t wait_time)
  * @return  错误码
  */
 static inline
-int lm_queue_pop(lm_queue_t queue, void *item, uint32_t wait_time, bool del_flag)
+int lm_queue_pop(lm_queue_t queue, void *item, uint32_t wait_time, bool del_flag, bool isr)
 {
     if (NULL == queue || NULL == item) {
         return LM_ENULL;
     }
 
     if (LM_TRUE == del_flag) {
-        if (pdPASS != xQueueReceive(queue, item, wait_time)) {
-            return LM_EQUEUE_EMPTY;
+        if (LM_FALSE != isr) {
+            /* todo: 此处有问题??? */
+//            if (pdPASS != xQueueReceiveFromISR(queue, item, wait_time)) {
+//                return LM_EQUEUE_EMPTY;
+//            }
+        } else {
+            if (pdPASS != xQueueReceive(queue, item, wait_time)) {
+                return LM_EQUEUE_EMPTY;
+            }
         }
     } else {
-        if(pdPASS != xQueuePeek(queue, item, wait_time)) {
-            return LM_EQUEUE_EMPTY;
+        if (LM_FALSE != isr) {
+            if (pdPASS != xQueuePeekFromISR(queue, item)) {
+                return LM_EQUEUE_EMPTY;
+            }
+        } else {
+            if (pdPASS != xQueuePeek(queue, item, wait_time)) {
+                return LM_EQUEUE_EMPTY;
+            }
         }
     }
 
