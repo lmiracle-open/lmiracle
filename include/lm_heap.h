@@ -17,6 +17,7 @@
 #define __LM_HEAP_H
 
 #include "FreeRTOS.h"
+#include "lm_types.h"
 
 LM_BEGIN_EXTERN_C
 

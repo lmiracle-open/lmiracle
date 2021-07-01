@@ -21,17 +21,6 @@
 LM_BEGIN_EXTERN_C
 
 /**
- * @brief 格式化输出参数设置
- *
- * @param[in] com       格式化输出串口号
- * @param[in] buf       格式化输出缓存指针
- * @param[in] size      格式化输出缓存长度
- *
- * @return  错误码
- */
-extern int lm_stdout_param_set (uint8_t com, uint8_t *buf, uint16_t size);
-
-/**
  * @brief 格式化输出
  *
  * @param[in]   fmt     格式化字符串

@@ -44,11 +44,6 @@ typedef Shell lm_shell_t;
 
 /******************************************************************************/
 /**
- * @brief shell 应用层回调函数类型定义
- */
-typedef int (*shell_data_handle_t) (const uint8_t *data, uint16_t len);
-
-/**
  * @brief shell 控制台参数配置结构体
  */
 typedef struct lm_console {
@@ -58,12 +53,12 @@ typedef struct lm_console {
     uint16_t cole_s;                        /* 控制台所用缓存大小 */
     uint8_t *recv_buf;                      /* 串口任务接收缓存 */
     uint32_t recv_size;                     /* 串口任务接收缓存大小 */
-    uint8_t *cole_out_buf;                  /* 标准输出缓存 */
+    uint8_t *out_buf;                       /* 标准输出缓存 */
     uint16_t out_s;                         /* 标准输出缓存大小 */
-    uint8_t *ulog_out_buf;                  /* 日志输出缓存 */
-    uint16_t ulog_s;                        /* 日志输出缓存大小 */
-    uint32_t stack_size;                    /* 控制台任务栈深度 */
-    uint32_t prio;                          /* 控制台任务优先级 */
+
+    /* 应用层回调注册 */
+    int (*shell_data_cb) (const uint8_t *data, uint16_t len);
+
 } lm_console_t;
 
 /**
@@ -73,16 +68,7 @@ typedef struct lm_console {
  *
  * @return  错误码
  */
-extern int lm_shell_register(lm_console_t *p_console);
-
-/**
- * @brief shell 应用层数据通知(应用层注册)
- *
- * @param[in]   shell_data_cb 应用层回调
- *
- * @return  错误码
- */
-extern int lm_shell_data_notice (shell_data_handle_t shell_data_cb);
+extern int lm_shell_register (lm_console_t *p_console);
 
 LM_END_EXTERN_C
 
