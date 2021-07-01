@@ -126,11 +126,6 @@ typedef  mutex_t lm_mutex_t;
 typedef semaphore_t lm_sem_t;
 
 /**
- * @brief 队列类型
- */
-typedef QueueHandle_t lm_queue_t;
-
-/**
  * @brief 创建计数型信号量
  *
  * @return [lm_sem_t]

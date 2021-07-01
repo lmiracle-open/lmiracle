@@ -18,6 +18,8 @@
 #include "lm_serial.h"
 #include "lm_kservice.h"
 
+#include "lm_ulog_interface.h"
+
 /* 日志管理安装地址声明(定义在链接文件中) */
 extern struct lm_ulog_mgr_info * __gp_ulog_start[];
 extern struct lm_ulog_mgr_info * __gp_ulog_end[];
@@ -25,9 +27,8 @@ extern struct lm_ulog_mgr_info * __gp_ulog_end[];
 /* 全局日志标记定义 */
 uint8_t g_ulog_flag = LM_ULOG_GLOBAL_FLAG;
 
-static uint8_t *__gp_ulog_buf = NULL;           /* 日志缓存地址 */
-static uint16_t __g_ulog_size = 0;              /* 日志缓存长度 */
-static uint8_t __g_ulog_com;                    /* 日志输出串口号 */
+/* 日志参数指针定义 */
+static lm_ulog_t *__gp_ulog_info = NULL;
 
 /******************************************************************************/
 /**
@@ -45,7 +46,7 @@ static int __ulog_vsout (   const char      *pre,   \
     lm_tm_t datetime;
 
     /* 1. 参数有效性检查 */
-    if (NULL == pre || NULL == name || NULL == __gp_ulog_buf) {
+    if (NULL == pre || NULL == name || NULL == __gp_ulog_info) {
         return -LM_ERROR;
     }
 
@@ -53,35 +54,35 @@ static int __ulog_vsout (   const char      *pre,   \
     if ((g_ulog_flag & LM_ULOG_FLAG_TIMESTAMP) && \
        (flag & LM_ULOG_FLAG_TIMESTAMP)) {
         lm_time_get(&datetime);
-        snprintf((void *)__gp_ulog_buf, __g_ulog_size, \
+        snprintf((void *)__gp_ulog_info->ulog_out_buf, __gp_ulog_info->ulog_s, \
                     "%02d %02d %02d:%02d:%02d ",
                     datetime.tm_mon, datetime.tm_yday, \
                     datetime.tm_hour, datetime.tm_min, datetime.tm_sec);
     } else {
-        __gp_ulog_buf[0] = '\0';
+        __gp_ulog_info->ulog_out_buf[0] = '\0';
     }
 
     /* 3. 打印日志级别 */
-    strcat((void *)__gp_ulog_buf, (void *)pre);
-    strcat((void *)__gp_ulog_buf, (void *)" ");
+    strcat((void *)__gp_ulog_info->ulog_out_buf, (void *)pre);
+    strcat((void *)__gp_ulog_info->ulog_out_buf, (void *)" ");
 
     /* 4. 打印设备或模块名称 */
     if ((g_ulog_flag & LM_ULOG_FLAG_NAME) && (flag & LM_ULOG_FLAG_NAME)) {
-        strcat((void *)__gp_ulog_buf, (void *)name);
-        strcat((void *)__gp_ulog_buf, (void *)" : ");
+        strcat((void *)__gp_ulog_info->ulog_out_buf, (void *)name);
+        strcat((void *)__gp_ulog_info->ulog_out_buf, (void *)" : ");
     }
 
     /* 5. 打印日志内容 */
-    vsnprintf((void *)&(__gp_ulog_buf[strlen((void *)__gp_ulog_buf)]), \
-            __g_ulog_size - strlen(STRBR) - \
-            strlen((void *)__gp_ulog_buf) - 1, fmt, va);
+    vsnprintf((void *)&(__gp_ulog_info[strlen((void *)__gp_ulog_info->ulog_out_buf)]), \
+            __gp_ulog_info->ulog_s - strlen(STRBR) - \
+            strlen((void *)__gp_ulog_info->ulog_out_buf) - 1, fmt, va);
 
     /* 6. 添加换行符 */
-    strcat((void *)__gp_ulog_buf, (void *)STRBR);
+    strcat((void *)__gp_ulog_info->ulog_out_buf, (void *)STRBR);
 
     /* 7. 打印 */
-    lm_serial_write(__g_ulog_com, (void *)__gp_ulog_buf, \
-                    strlen((void *)__gp_ulog_buf));
+    lm_serial_write(__gp_ulog_info->com, (void *)__gp_ulog_info->ulog_out_buf, \
+                    strlen((void *)__gp_ulog_info->ulog_out_buf));
 
     /* 8. 检查日志是否需要保存 */
     switch (type) {
@@ -110,24 +111,6 @@ static int __ulog_vsout (   const char      *pre,   \
     RETURN_2:
 
     return ret;
-}
-
-/******************************************************************************/
-/**
- * @brief 日志接口参数设置
- */
-int lm_ulog_param_set (uint8_t com, uint8_t *buf, uint16_t size)
-{
-    __g_ulog_com = com;
-
-    if (NULL == buf) {
-        return -LM_ERROR;
-    }
-
-    __gp_ulog_buf = buf;
-    __g_ulog_size = size;
-
-    return LM_OK;
 }
 
 /**
@@ -321,11 +304,17 @@ void lm_ulog_disable (const char *name)
 }
 
 /**
- * @brief 日志模块初始化
+ * @brief 日志注册
  */
-int lm_ulog_init (void)
+int lm_ulog_register (lm_ulog_t *p_ulog)
 {
     int ret = LM_OK;
+
+    /* 1. 检查输入参数是否有效 */
+    lm_assert(NULL != p_ulog);
+
+    /* 2. 注册数据结构  */
+    __gp_ulog_info = p_ulog;
 
     return ret;
 }

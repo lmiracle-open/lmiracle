@@ -26,26 +26,83 @@
 #include "mbport.h"
 
 #include "lm_serial.h"          /* 串口框架层接口 */
-#include "lm_drv_s32k_lpuart.h"
 #include "lm_mb_interface.h"
 
 /* ----------------------- Defines ------------------------------------------*/
 /* 定义modbus串口传输事件 */
-#define MB_SERIAL_TRANS_EVENT                        (1<<0)
+#define __MB_SERIAL_TRANS_EVENT           (1<<0)
+
+#define __MB_SERIAL_STASK_PRIO            6           /* 串口发送任务优先级 */
+#define __MB_SERIAL_STASK_STACK           256         /* 串口发送任务栈深度 */
+
+#define __MB_SERIAL_RTASK_PRIO            6           /* 串口接收任务优先级 */
+#define __MB_SERIAL_RTASK_STACK           256         /* 串口接收任务栈深度 */
 
 /* ----------------------- static functions ---------------------------------*/
 
 /* 定义modbus串口指针 */
-const static lm_mb_serial_t *__gp_mb_serial = NULL;
+const static lm_mb_serial_t *__gp_mb_serial         = NULL;
 
 /* 定义modbus串口事件实体 */
-static lm_devent_t __gp_mb_serial_event = NULL;
+static lm_devent_t          __gp_mb_serial_event    = NULL;
 
-/* ----------------------- static functions ---------------------------------*/
+/******************************************************************************/
 
-static void prvvUARTTxReadyISR(void);
-static void prvvUARTRxISR(void);
-/* ----------------------- Start implementation -----------------------------*/
+/*
+ * Create an interrupt handler for the transmit buffer empty interrupt
+ * (or an equivalent) for your target processor. This function should then
+ * call pxMBFrameCBTransmitterEmpty( ) which tells the protocol stack that
+ * a new character can be sent. The protocol stack will then call
+ * xMBPortSerialPutByte( ) to send the character.
+ */
+static void prvvUARTTxReadyISR(void)
+{
+    pxMBFrameCBTransmitterEmpty();
+}
+
+/*
+ * Create an interrupt handler for the receive interrupt for your target
+ * processor. This function should then call pxMBFrameCBByteReceived( ). The
+ * protocol stack will then call xMBPortSerialGetByte( ) to retrieve the
+ * character.
+ */
+static void prvvUARTRxISR(void)
+{
+    pxMBFrameCBByteReceived();
+}
+
+/******************************************************************************/
+
+/**
+ * @brief modbus串口传输数据任务
+ */
+static void __mb_serial_trans_task (void* parameter)
+{
+    while (1) {
+        /* 等待modbus串口传输开始事件 */
+        lm_event_wait(  __gp_mb_serial_event, \
+                        __MB_SERIAL_TRANS_EVENT, \
+                        LM_TYPE_FALSE, \
+                        LM_TYPE_FALSE, \
+                        LM_SEM_WAIT_FOREVER);
+        /* 执行modbus传输数据回调函数 */
+        prvvUARTTxReadyISR();
+    }
+}
+
+/**
+ * @brief modbus串口读取数据任务
+ */
+static void __mb_serial_read_task (void* parameter)
+{
+    while (1) {
+        /* 内部阻塞读取 */
+        prvvUARTRxISR();
+    }
+}
+
+/******************************************************************************/
+
 /**
  * @brief 使能modbus串口
  */
@@ -54,11 +111,11 @@ void vMBPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
     /* 1. 是否使能串口发送 */
     if (xTxEnable) {
         /* 发送串口开始传输事件 */
-        lm_event_set(__gp_mb_serial_event, MB_SERIAL_TRANS_EVENT);
+        lm_event_set(__gp_mb_serial_event, __MB_SERIAL_TRANS_EVENT);
     } else {
         /* 停止串口传输  */
         lm_event_wait(  __gp_mb_serial_event, \
-                        MB_SERIAL_TRANS_EVENT, \
+                        __MB_SERIAL_TRANS_EVENT, \
                         LM_TYPE_TRUE, \
                         LM_TYPE_FALSE, \
                         0);
@@ -109,63 +166,12 @@ BOOL xMBPortSerialPutBuff (CHAR * ucBuff, uint32_t len)
     return lm_serial_write(__gp_mb_serial->com, ucBuff, len);
 }
 
-/* 
- * Create an interrupt handler for the transmit buffer empty interrupt
- * (or an equivalent) for your target processor. This function should then
- * call pxMBFrameCBTransmitterEmpty( ) which tells the protocol stack that
- * a new character can be sent. The protocol stack will then call 
- * xMBPortSerialPutByte( ) to send the character.
- */
-void prvvUARTTxReadyISR(void)
-{
-    pxMBFrameCBTransmitterEmpty();
-}
-
-/* 
- * Create an interrupt handler for the receive interrupt for your target
- * processor. This function should then call pxMBFrameCBByteReceived( ). The
- * protocol stack will then call xMBPortSerialGetByte( ) to retrieve the
- * character.
- */
-void prvvUARTRxISR(void)
-{
-    pxMBFrameCBByteReceived();
-}
-
-/**
- * @brief modbus串口传输数据任务
- */
-static void __mb_serial_trans_task (void* parameter)
-{
-    while (1) {
-        /* 等待modbus串口传输开始事件 */
-        lm_event_wait(  __gp_mb_serial_event, \
-                        MB_SERIAL_TRANS_EVENT, \
-                        LM_TYPE_FALSE, \
-                        LM_TYPE_FALSE, \
-                        LM_SEM_WAIT_FOREVER);
-        /* 执行modbus传输数据回调函数 */
-        prvvUARTTxReadyISR();
-    }
-}
-
-/**
- * @brief modbus串口读取数据任务
- */
-static void __mb_serial_read_task (void* parameter)
-{
-    while (1) {
-        /* 内部阻塞读取 */
-        prvvUARTRxISR();
-    }
-}
-
 /**
  * @brief modbus获取串口传输类型
  */
 void *get_serial_transmit_type (void)
 {
-    return (void *)__gp_mb_serial->transmit_type;
+    return (void *)&__gp_mb_serial->transmit_type;
 }
 
 /**
@@ -174,7 +180,7 @@ void *get_serial_transmit_type (void)
 BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
         eMBParity eParity)
 {
-    int ret = LM_OK;
+    int ret = TRUE;
 
     struct lm_serial_info serial_info;
 
@@ -199,26 +205,28 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
     /* 4.创建modbus从机串口发送数据任务 */
     ret = lm_task_create(   "serial_trans",                     \
                             __mb_serial_trans_task,             \
-                            __gp_mb_serial->stask_stack_size,   \
-                            __gp_mb_serial->stask_prio,         \
+                            __MB_SERIAL_STASK_STACK,            \
+                            __MB_SERIAL_STASK_PRIO,             \
                             NULL);
     lm_assert(LM_TYPE_FAIL != (lm_base_t)ret);
 
     /* 5.创建modbus从机串口读取数据任务 */
     ret = lm_task_create(   "serial_recv",                      \
                             __mb_serial_read_task,              \
-                            __gp_mb_serial->rtask_stack_size,   \
-                            __gp_mb_serial->rtask_prio,         \
+                            __MB_SERIAL_RTASK_STACK,            \
+                            __MB_SERIAL_RTASK_PRIO,             \
                             NULL);
     lm_assert(LM_TYPE_FAIL != (lm_base_t)ret);
 
-    return TRUE;
+    return ret;
 }
+
+/******************************************************************************/
 
 /**
  * @brief modbus串口底层接口注册
  */
-int lm_mb_serial_register (const lm_mb_serial_t *p_mb_serial)
+int lm_modbus_serial_register (const lm_mb_serial_t *p_mb_serial)
 {
     /* 1.检查输入参数是否有效 */
     lm_assert(NULL != p_mb_serial);

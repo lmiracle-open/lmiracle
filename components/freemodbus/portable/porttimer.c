@@ -65,7 +65,7 @@ BOOL xMBPortTimersInit(USHORT usTim1Timerout50us)
 /**
  * @brief 启动定时器
  */
-void vMBPortTimersEnable()
+void vMBPortTimersEnable (void)
 {
     if(__gp_mb_timer->timer_switch) {
         if (__gp_mb_timer->timer_sleep) {
@@ -77,7 +77,7 @@ void vMBPortTimersEnable()
 /**
  * @brief 停止定时器
  */
-void vMBPortTimersDisable()
+void vMBPortTimersDisable (void)
 {
     if(__gp_mb_timer->timer_switch) {
        if (__gp_mb_timer->timer_sleep) {
@@ -89,17 +89,19 @@ void vMBPortTimersDisable()
 /**
  * @brief 定时器超时处理函数 底层硬件定时器中断调用
  */
-int lm_mb_timer_expired_cb (void)
+int lm_modbus_timer_expired_cb (void)
 {
     (void) pxMBPortCBTimerExpired();
 
     return LM_OK;
 }
 
+/******************************************************************************/
+
 /**
  * @brief 定时器底层接口注册
  */
-int lm_mb_timer_register (const lm_mb_timer_t *p_mb_timer)
+int lm_modbus_timer_register (const lm_mb_timer_t *p_mb_timer)
 {
     /* 1.检查输入参数是否有效 */
     lm_assert(NULL != p_mb_timer);

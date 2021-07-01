@@ -82,6 +82,18 @@ xMBUtilSetBits( UCHAR * ucByteBuf, USHORT usBitOffset, UCHAR ucNBits,
     ucByteBuf[usByteOffset + 1] = ( UCHAR )( usWordBuf >> BITS_UCHAR );
 }
 
+/* ucByteBuf[0] = 0xff   usBitOffset = 0   ucNBits = 8
+ *
+ * usByteOffset = 0
+ * usNPreBits = 0
+ * usMask = 0xff   0000 0001 0000 0000
+ * usWordBuf = 0xff
+ * usWordBuf = usWordBuf | 0xff << 8 = 0xffff
+ * usWordBuf = usWordBuf >> 0 = 0xffff
+ * usWordBuf = usWordBuf & 0xff = 0xff
+ *
+ *   */
+
 UCHAR
 xMBUtilGetBits( UCHAR * ucByteBuf, USHORT usBitOffset, UCHAR ucNBits )
 {

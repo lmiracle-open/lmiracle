@@ -16,8 +16,6 @@
 #include "lmiracle.h"
 #include "lm_time.h"
 
-extern int lm_shell_init (void);
-
 /**
  * @brief 初始化系统相关的
  */
@@ -27,10 +25,7 @@ int lm_system_init (void)
 
     /* 0.todo:预留 */
 
-    /* 1. 初始化shell */
-    lm_shell_init();
-
-    /* 2. 时间初始化 */
+    /* 1. 时间初始化 */
     lm_time_init();
 
     return ret;
