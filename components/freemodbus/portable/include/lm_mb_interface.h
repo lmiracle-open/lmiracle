@@ -71,9 +71,9 @@ typedef struct lm_mb_serial {
 } lm_mb_serial_t;
 
 /**
- * @brief modbus寄存器注册结构体
+ * @brief modbus参数注册结构体
  */
-typedef struct lm_mb_modbus {
+typedef struct lm_mb_param {
 
     eMBMode     mb_mode;                    /* 通信模式 */
 
@@ -84,6 +84,13 @@ typedef struct lm_mb_modbus {
     ULONG       mb_baud;                    /* 波特率 */
 
     UCHAR       mb_com;                     /* 串口号 */
+
+} lm_mb_param_t;
+
+/**
+ * @brief modbus寄存器注册结构体
+ */
+typedef struct lm_mb_reg {
 
     USHORT      coil_start_addr;            /* 线圈寄存器起始地址 */
     USHORT      coil_num;                   /* 线圈寄存器个数 */
@@ -101,7 +108,7 @@ typedef struct lm_mb_modbus {
     USHORT      hold_num;                   /* 保持寄存器个数 */
     USHORT      *hold_buf;                  /* 保持寄存器缓存 */
 
-} lm_mb_modbus_t;
+} lm_mb_reg_t;
 
 /***************************** modbus从机对外提供接口  *****************************/
 
@@ -112,7 +119,16 @@ typedef struct lm_mb_modbus {
  *
  * @return  错误码
  */
-extern int lm_modbus_reg_register (lm_mb_modbus_t *p_mb_reg);
+extern int lm_modbus_reg_register (lm_mb_reg_t *p_mb_reg);
+
+/**
+ * @brief modbus参数接口注册
+ *
+ * @param[in]   p_mb_param 参数指针
+ *
+ * @return  错误码
+ */
+extern int lm_modbus_param_register (lm_mb_param_t *p_mb_param);
 
 /**
  * @brief 串口底层接口注册
@@ -162,7 +178,7 @@ int lm_modbus_reg_write (uint8_t type, const uint8_t *pbuf, uint16_t addr, uint1
  *
  * @return  错误码
  */
-extern int lm_modbus_reg_read (uint8_t *data, uint16_t size);
+extern int lm_modbus_reg_read (void *data, uint16_t size);
 
 LM_END_EXTERN_C
 

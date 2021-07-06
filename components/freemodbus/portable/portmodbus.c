@@ -14,6 +14,7 @@
 *******************************************************************************/
 
 #include "lm_mb_interface.h"
+#include "lm_pack.h"
 
 #define __MB_POLL_TASK_PRIO             6           /* modbus轮询事件任务优先级 */
 #define __MB_POLL_TASK_STACK            256         /* modbus轮询事件任务栈深度 */
@@ -22,8 +23,11 @@
 #define __MB_HOLD_REG_EVENT             (1<<0)
 #define __MB_COIL_REG_EVENT             (1<<1)
 
+/* 定义modbus参数指针 */
+static lm_mb_param_t                *__gp_mb_param      = NULL;
+
 /* 定义modbus寄存器指针 */
-static lm_mb_modbus_t               *__gp_mb_reg        = NULL;
+static lm_mb_reg_t                  *__gp_mb_reg        = NULL;
 
 /* 定义modbus寄存器事件 */
 static lm_devent_t                  __gp_mb_reg_event   = NULL;
@@ -373,11 +377,11 @@ static void __mb_slave_poll_task (void *p_arg)
     lm_assert(NULL != __gp_mb_reg);
 
     /* 2. 初始化modbus */
-    eMBInit(__gp_mb_reg->mb_mode,       \
-            __gp_mb_reg->slave_addr,    \
-            __gp_mb_reg->mb_com,        \
-            __gp_mb_reg->mb_baud,       \
-            __gp_mb_reg->mb_par);
+    eMBInit(__gp_mb_param->mb_mode,       \
+            __gp_mb_param->slave_addr,    \
+            __gp_mb_param->mb_com,        \
+            __gp_mb_param->mb_baud,       \
+            __gp_mb_param->mb_par);
 
     /* 3. 使能modbus */
     eMBEnable();
@@ -428,13 +432,15 @@ int lm_modbus_reg_write (uint8_t type, const uint8_t *pbuf, uint16_t addr, uint1
 /**
  * @brief modbus寄存器读操作
  */
-int lm_modbus_reg_read (uint8_t *data, uint16_t size)
+int lm_modbus_reg_read (void *data, uint16_t size)
 {
     int ret = -LM_ERROR;
 
     uint16_t len = 0;
 
     lm_bits_t r_event;          /* 接收事件信息 */
+
+    uint16_t *p_data = (uint16_t *)data;
 
     /* 1. 参数有效性检查 */
     if (NULL == data) {
@@ -450,30 +456,34 @@ int lm_modbus_reg_read (uint8_t *data, uint16_t size)
     if (__MB_HOLD_REG_EVENT == r_event ||  __MB_COIL_REG_EVENT == r_event) {
 
         /* 填充地址 */
-        data[len++] = (uint8_t)((cur_reg_waddr-1) >> 8);
-        data[len++] = (uint8_t)((cur_reg_waddr-1));
+        p_data[len++] = cur_reg_waddr-1;
 
         /* 填充长度 */
-        data[len++] = (uint8_t)(cur_reg_wnum >> 8);
-        data[len++] = (uint8_t)(cur_reg_wnum);
+        p_data[len++] = cur_reg_wnum;
 
         /* 拷贝数据 */
         if (__MB_HOLD_REG_EVENT == r_event) {
-            if ((cur_reg_wnum*2) > (size-len)) {
-                eMBRegHoldingCB((UCHAR *)&data[len], cur_reg_waddr, 2*(size-len), MB_REG_READ);
-                len += (size-len);
+            if ((cur_reg_wnum*2) > (size-(2*len))) {
+                eMBRegHoldingCB((UCHAR *)&p_data[len], cur_reg_waddr, (size-(2*len))/2, MB_REG_READ);
+                /* 打包数据 (大端格式) */
+                pack_be16(&p_data[len], &p_data[len], (size-(2*len))/2);
+                len += (size-(2*len))/2;
             } else {
-                eMBRegHoldingCB((UCHAR *)&data[len], cur_reg_waddr, cur_reg_wnum, MB_REG_READ);
-                len += 2*cur_reg_wnum;
+                eMBRegHoldingCB((UCHAR *)&p_data[len], cur_reg_waddr, cur_reg_wnum, MB_REG_READ);
+                /* 打包数据 (大端格式) */
+                pack_be16(&p_data[len], &p_data[len], cur_reg_wnum);
+                len += cur_reg_wnum;
             }
+            len *= 2;       /* todo: 转换为字节长度 */
         } else if (__MB_COIL_REG_EVENT == r_event) {
-            if ((cur_reg_wnum/8 + 1) > (size-len)) {
-                eMBRegCoilsCB((UCHAR *)&data[len], cur_reg_waddr, 8*(size-len), MB_REG_READ);
-                len += (size-len);
+            if ((cur_reg_wnum/8 + 1) > (size-(2*len))) {
+                eMBRegCoilsCB((UCHAR *)&p_data[len], cur_reg_waddr, 8*(size-(2*len)), MB_REG_READ);
+                len += (size-(2*len));
             } else {
-                eMBRegCoilsCB((UCHAR *)&data[len], cur_reg_waddr, cur_reg_wnum, MB_REG_READ);
+                eMBRegCoilsCB((UCHAR *)&p_data[len], cur_reg_waddr, cur_reg_wnum, MB_REG_READ);
                 len += (cur_reg_wnum/8 + 1);
             }
+            len += 2;       /* todo: 长度和地址按照16位存放的,所以此处多加2字节 */
         }
 
         /* 返回实际拷贝的长度 */
@@ -489,7 +499,7 @@ int lm_modbus_reg_read (uint8_t *data, uint16_t size)
 /**
  * @brief modbus寄存器接口注册
  */
-int lm_modbus_reg_register (lm_mb_modbus_t *p_mb_reg)
+int lm_modbus_reg_register (lm_mb_reg_t *p_mb_reg)
 {
     int ret = LM_OK;
 
@@ -498,6 +508,25 @@ int lm_modbus_reg_register (lm_mb_modbus_t *p_mb_reg)
 
     /* 2. 注册 */
     __gp_mb_reg = p_mb_reg;
+
+    return LM_OK;
+}
+
+/*******************************************************************************
+* Description   : modbus 参数注册接口
+*******************************************************************************/
+/**
+ * @brief modbus参数接口注册
+ */
+int lm_modbus_param_register (lm_mb_param_t *p_mb_param)
+{
+    int ret = LM_OK;
+
+    /* 1. 检查输入参数是否有效 */
+    lm_assert(NULL != p_mb_param);
+
+    /* 2. 注册 */
+    __gp_mb_param = p_mb_param;
 
     /* 3. 创建寄存器读写锁 */
     lm_mutex_create(&__gp_mb_reg_mutex);
