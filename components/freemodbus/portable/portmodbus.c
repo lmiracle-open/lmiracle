@@ -509,7 +509,7 @@ int lm_modbus_reg_register (lm_mb_reg_t *p_mb_reg)
     /* 2. 注册 */
     __gp_mb_reg = p_mb_reg;
 
-    return LM_OK;
+    return ret;
 }
 
 /*******************************************************************************
