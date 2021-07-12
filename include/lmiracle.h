@@ -87,13 +87,6 @@ typedef BaseType_t lm_base_t ;
 typedef TickType_t lm_tick_t ;
 
 /**
- * @brief 获取当前的tick值
- *
- * @return [lm_tick_t] 返回tick值
- */
-#define lm_sys_get_tick()                   xTaskGetTickCount()
-
-/**
  * @brief 互斥锁类型
  */
 typedef  mutex_t lm_mutex_t;
@@ -222,7 +215,8 @@ typedef EventBits_t         lm_bits_t;
 /**
  * @brief 将ms转换为tick
  */
-#define lm_ms_to_tick(timeout)                     MSEC_TO_TICK(timeout)
+//#define lm_ms_to_tick(timeout)                     MSEC_TO_TICK(timeout)
+#define lm_ms_to_tick(timeout)                     (timeout)
 
 /**
  * @brief 将tick装换为ms
