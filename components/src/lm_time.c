@@ -74,4 +74,30 @@ int lm_time_get (lm_tm_t *p_tm)
     return ret;
 }
 
+/**
+ * @brief 检查时间到期
+ */
+bool lm_time_expire_check (uint32_t *oldtick, uint32_t ms, bool update)
+{
+    uint32_t tmpoint = 0;
+
+    /* 1. 参数有效性检查 */
+    if (NULL == oldtick) {
+        return false;
+    }
+
+    /* 2.计算检测时间点 */
+    tmpoint = *oldtick + lm_ms_to_tick(ms);
+
+    /* 3. 检查到期 */
+    if (time_after(int32_t, lm_sys_get_tick(), tmpoint)) {
+        if (true == update) {
+            *oldtick = tmpoint;
+        }
+        return true;
+    }
+
+    return false;
+}
+
 /* end of file */

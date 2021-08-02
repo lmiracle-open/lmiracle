@@ -20,6 +20,14 @@
 
 LM_BEGIN_EXTERN_C
 
+/*******************************************************************************
+* MacroName      : time_after()
+* Description    : 时间a在时间b之后
+* EntryParameter : type,时间值的有符号类型, a,b,时间值
+* ReturnValue    : true,成立, false,不成立
+*******************************************************************************/
+#define time_after(type,a,b)        ((type)(b) - (type)(a) <= 0)
+
 /**
  * @brief 时间结构体
  */
@@ -80,6 +88,17 @@ extern int lm_time_get (lm_tm_t *p_tm);
  * @return  错误码
  */
 extern int lm_time_cb_notice (sys_time_set_t p_set, sys_time_get_t p_get);
+
+/**
+ * @brief 检查时间到期
+ *
+ * @param[out]  oldtick,上次时间tick(如果超时,会被更新到当前tick值)
+ * @param[in]   ms,间隔毫秒
+ * @param[in]   update,是否更新时间
+ *
+ * @return      true,到期, false,未到期
+ */
+extern bool lm_time_expire_check (uint32_t *oldtick, uint32_t ms, bool update);
 
 /**
  * @brief 时间初始化
