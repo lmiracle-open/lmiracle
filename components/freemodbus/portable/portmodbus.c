@@ -374,7 +374,7 @@ eMBErrorCode eMBRegDiscreteCB(  UCHAR * pucRegBuffer,   \
 static void __mb_slave_poll_task (void *p_arg)
 {
     /* 1. 检查参数是否有效 */
-    lm_assert(NULL != __gp_mb_reg);
+    lm_assert(NULL != __gp_mb_param);
 
     /* 2. 初始化modbus */
     eMBInit(__gp_mb_param->mb_mode,       \
